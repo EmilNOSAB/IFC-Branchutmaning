@@ -36,7 +36,42 @@ CFG_VARS = ["_USTN_PRODUCT_RELEASE", "_USTN_PRODUCT_VERSION_GENERATION", "_ENGIN
             "MSDIR", "_USTN_PROGRAMDATA", "_USTN_CONFIGURATION", "MS_PYTHON", "MS_PYTHONSEARCHDIRECTORIES",
             "MS_DESIGNSEED", "MS_SEEDFILES", "MS_DGNLIBLIST", "MS_DGNLIBLIST_ITEMTYPES", "ITEMTYPE_LOOKUP",
             "MS_GEOCOORDINATE_DATA", "_USTN_WORKSPACENAME", "_USTN_WORKSETNAME"]
-PATTERNS = ["IFC_Classes_Types*", "*SchemaMapping*.json", "*iTwinIFCExporter*", "*IfcExport*.json"]
+PATTERNS = ["IFC_Classes_Types*", "*SchemaMapping*.json", "*iTwinIFCExporter*", "*IfcExport*.json", "*Mapping*.json"]
+
+
+def _is_mapping_template(path: str) -> bool:
+    """A JSON(C) file that looks like an IFC export mapping (GlobalVariables or
+    "Class" entries), found in a folder whose path mentions IFC."""
+    if not path.lower().endswith(".json") or "ifc" not in path.lower():
+        return False
+    try:
+        if os.path.getsize(path) > 20 * 1024 * 1024:
+            return False
+        with open(path, encoding="utf-8", errors="ignore") as fh:
+            head = fh.read()
+        return "GlobalVariables" in head or '"Class"' in head
+    except OSError:
+        return False
+
+
+def _search_json_in_ifc_dirs(roots, max_depth=9, limit=100):
+    hits = []
+    for root in roots:
+        if not root or not os.path.isdir(root):
+            continue
+        base_depth = root.rstrip("\\/").count(os.sep)
+        for dirpath, dirnames, filenames in os.walk(root):
+            if dirpath.count(os.sep) - base_depth >= max_depth:
+                dirnames[:] = []
+            if "ifc" not in dirpath.lower():
+                continue
+            for name in filenames:
+                full = os.path.join(dirpath, name)
+                if _is_mapping_template(full):
+                    hits.append(full)
+                    if len(hits) >= limit:
+                        return hits
+    return hits
 API_CLASSES = {
     "MSPyDgnPlatform": ["CustomProperty", "ItemTypeLibrary", "ItemType", "CustomItemHost", "DraftingElementSchema",
                         "NamedGroup", "DgnGCS", "BaseGCS", "FileLevelCache", "ElementPropertiesSetter"],
@@ -119,13 +154,16 @@ def main():
     for env in ("ProgramData", "ProgramFiles", "LOCALAPPDATA"):
         if os.environ.get(env):
             roots.append(os.path.join(os.environ[env], "Bentley"))
-    files = _search(list(dict.fromkeys(r for r in roots if r)), PATTERNS)
+    roots = list(dict.fromkeys(r for r in roots if r))
+    files = _search(roots, PATTERNS)
     report["bentley_files"] = files
+    templates = list(dict.fromkeys([f for f in files if _is_mapping_template(f)] + _search_json_in_ifc_dirs(roots)))
+    report["schema_mapping_candidates"] = templates
     env_dir = repo_path(os.path.join("output", "env"))
     os.makedirs(env_dir, exist_ok=True)
     copied = []
-    for f in files:
-        if f.lower().endswith(".json") and os.path.isfile(f):
+    for f in templates:
+        if os.path.isfile(f):
             dst = os.path.join(env_dir, "%02d_%s" % (len(copied), os.path.basename(f)))
             shutil.copyfile(f, dst)
             copied.append({"source": f, "copy": dst})

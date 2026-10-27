@@ -84,7 +84,7 @@ def instructions(cfg, mapping_copy: str) -> str:
         "IFC-export i MicroStation 2025 (Technology Preview iTwin IFC Exporter)",
         "",
         "1. Öppna exportdialogen: File > Export > Exchange File Types > IFC (*.ifc)",
-        "   eller key-in: %s, därefter %s" % KEYINS,
+        "   eller key-in: %s, därefter %s" % tuple(KEYINS),
         "   (första gången: uppdatera iModel Connector när MicroStation frågar, klicka Continue)",
         "2. IFC Version: välj IFC 4.3 (IFC4X3_ADD2) i listan.",
         "3. Output file: %s" % ifc_out,

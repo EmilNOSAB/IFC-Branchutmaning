@@ -254,6 +254,10 @@ def run(argv=None, backend=None, log=print) -> dict:
     with open(out, "w", encoding="utf-8") as fh:
         json.dump(report, fh, ensure_ascii=False, indent=1, default=str)
     log("Rapport: %s" % out)
+    for e in ctx.errors[:15]:
+        log("FEL: %s" % e)
+    if len(ctx.errors) > 15:
+        log("... %d fel till i rapporten" % (len(ctx.errors) - 15))
     log("Skapade element: %d, fel: %d, varningar: %d, kontroll ok: %s" % (
         report["created_total"], len(ctx.errors), len(report["warnings"]), report["model_check_after_build"]["ok"]))
     return report

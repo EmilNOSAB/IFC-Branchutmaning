@@ -49,13 +49,14 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 from .backend import BackendError, DgnBackend
 
 try:  # The MicroStation Python modules only exist inside MicroStation
-    from MSPyBentley import WString  # noqa: F401
-    from MSPyBentleyGeom import (CurveVector, DgnBoxDetail, DPoint3d, DVec3d, ISolidPrimitive,  # noqa: F401
-                                 PolyfaceHeader)
+    from MSPyBentley import Int32Array, WString  # noqa: F401
+    from MSPyBentleyGeom import (CurveVector, DgnBoxDetail, DPoint3d, DPoint3dArray, DVec3d,  # noqa: F401
+                                 ISolidPrimitive, PolyfaceHeader)
     from MSPyECObjects import ECValue
     from MSPyDgnPlatform import (BaseGCS, ConfigurationManager, CustomItemHost, CustomProperty,  # noqa: F401
                                  DgnGCS, DraftingElementSchema, EditElementHandle, ElementPropertiesSetter,
-                                 ItemTypeLibrary, NamedGroup, NamedGroupFlags, NamedGroupMemberFlags)
+                                 ItemTypeLibrary, LineStringHandler, NamedGroup, NamedGroupFlags,
+                                 NamedGroupMemberFlags, ShapeHandler)
     from MSPyMstnPlatform import ISessionMgr, PyCadInputQueue
     MICROSTATION_AVAILABLE = True
     IMPORT_ERROR = None
@@ -328,14 +329,44 @@ class MicroStationBackend(DgnBackend):
         st = DraftingElementSchema.ToElement(eeh, solid, None, self.model_ref)
         return self._finish(eeh, st, "box", level_id, color, weight)
 
-    def add_mesh(self, vertices, faces, level_id, color, weight):
+    def _indexed_polyface(self, vertices, faces):
+        """Closed triangle mesh with exactly shared vertices.
+
+        PolyfaceHeader.CreateIndexedMesh(numPerFace, DPoint3dArray, Int32Array).
+        The index base (0/1) is not stated in the reference, so it is probed once
+        with IsClosedByEdgePairing() and reused.  Falls back to AddPolygon per
+        face WITHOUT Compress(): in the first MicroStation run Compress() merged
+        nearby vertices of the rail outline (mm spacing) and broke closure."""
+        pts = DPoint3dArray()
+        for p in vertices:
+            pts.append(self._pt(p))
+        tri = all(len(f) == 3 for f in faces)
+        bases = [self._mesh_index_base] if getattr(self, "_mesh_index_base", None) is not None else [1, 0]
+        if tri:
+            for base in bases:
+                idx = Int32Array()
+                for f in faces:
+                    for i in f:
+                        idx.append(int(i) + base)
+                try:
+                    pf = PolyfaceHeader.CreateIndexedMesh(3, pts, idx)
+                except Exception as e:  # pragma: no cover - reported once
+                    self.log("CreateIndexedMesh failed (%s), using AddPolygon" % e)
+                    break
+                if pf is not None and pf.IsClosedByEdgePairing():
+                    if getattr(self, "_mesh_index_base", None) is None:
+                        self._mesh_index_base = base
+                        self.log("  polyface: CreateIndexedMesh with %d-based indices" % base)
+                    return pf, True
         pf = PolyfaceHeader.CreateVariableSizeIndexed()
-        pts = [self._pt(p) for p in vertices]
+        plist = [self._pt(p) for p in vertices]
         for f in faces:
-            pf.AddPolygon([pts[i] for i in f])
-        pf.Compress()
+            pf.AddPolygon([plist[i] for i in f])
+        return pf, bool(pf.IsClosedByEdgePairing())
+
+    def add_mesh(self, vertices, faces, level_id, color, weight):
+        pf, closed = self._indexed_polyface(vertices, faces)
         pf.SetTwoSided(False)
-        closed = bool(pf.IsClosedByEdgePairing())
         eeh = EditElementHandle()
         st = DraftingElementSchema.ToElement(eeh, pf, None, self.model_ref)
         self._finish(eeh, st, "mesh", level_id, color, weight)
@@ -355,18 +386,56 @@ class MicroStationBackend(DgnBackend):
         st = DraftingElementSchema.ToElement(eeh, solid, None, self.model_ref)
         return self._finish(eeh, st, "ruled sweep", level_id, color, weight)
 
-    def add_linestring(self, points, level_id, color, weight):
-        cv = CurveVector.CreateLinear([self._pt(p) for p in points], CurveVector.BoundaryType.eBOUNDARY_TYPE_Open, False)
+    # DGN line strings / shapes hold at most 5000 vertices
+    MAX_VERTICES = 5000
+
+    def _point_array(self, points, closed: bool):
+        pts = list(points)
+        if len(pts) > self.MAX_VERTICES - 1:
+            step = len(pts) / float(self.MAX_VERTICES - 2)
+            pts = [pts[int(i * step)] for i in range(self.MAX_VERTICES - 2)] + [pts[-1]]
+        if closed:
+            pts = pts + [pts[0]]
+        arr = DPoint3dArray()
+        for p in pts:
+            arr.append(self._pt(p))
+        return arr
+
+    def _curve_element(self, points, closed: bool, what: str, level_id, color, weight):
+        """Line string / shape.  First LineStringHandler/ShapeHandler
+        (CreateLineStringElement / CreateShapeElement(eeh, template, DPoint3dArray,
+        is3d, modelRef)); if that fails, CurveVector.CreateLinear +
+        DraftingElementSchema.ToElement.  Every failure reason is reported."""
+        arr = self._point_array(points, closed)
+        reasons = []
         eeh = EditElementHandle()
-        st = DraftingElementSchema.ToElement(eeh, cv, None, True, self.model_ref)
-        return self._finish(eeh, st, "line string", level_id, color, weight)
+        try:
+            if closed:
+                st = ShapeHandler.CreateShapeElement(eeh, None, arr, True, self.model_ref)
+            else:
+                st = LineStringHandler.CreateLineStringElement(eeh, None, arr, True, self.model_ref)
+            if _ok(st):
+                return self._finish(eeh, st, what, level_id, color, weight)
+            reasons.append("handler status %s" % st)
+        except Exception as e:
+            reasons.append("handler: %s" % e)
+        try:
+            bt = CurveVector.BoundaryType.eBOUNDARY_TYPE_Outer if closed else CurveVector.BoundaryType.eBOUNDARY_TYPE_Open
+            cv = CurveVector.CreateLinear(arr, bt, False)
+            eeh = EditElementHandle()
+            st = DraftingElementSchema.ToElement(eeh, cv, None, True, self.model_ref)
+            if _ok(st):
+                return self._finish(eeh, st, what, level_id, color, weight)
+            reasons.append("CurveVector status %s" % st)
+        except Exception as e:
+            reasons.append("CurveVector: %s" % e)
+        raise BackendError("%s (%d points) could not be created: %s" % (what, len(arr), "; ".join(reasons)))
+
+    def add_linestring(self, points, level_id, color, weight):
+        return self._curve_element(points, False, "line string", level_id, color, weight)
 
     def add_shape(self, points, level_id, color, weight):
-        pts = [self._pt(p) for p in points] + [self._pt(points[0])]
-        cv = CurveVector.CreateLinear(pts, CurveVector.BoundaryType.eBOUNDARY_TYPE_Outer, False)
-        eeh = EditElementHandle()
-        st = DraftingElementSchema.ToElement(eeh, cv, None, True, self.model_ref)
-        return self._finish(eeh, st, "shape", level_id, color, weight)
+        return self._curve_element(points, True, "shape", level_id, color, weight)
 
     def element_id(self, element) -> int:
         return int(element.GetElementId())
