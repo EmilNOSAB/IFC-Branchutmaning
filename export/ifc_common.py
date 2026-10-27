@@ -11,7 +11,13 @@ ROOT = os.path.dirname(HERE)
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-import ifcopenshell  # noqa: E402
+try:
+    import ifcopenshell  # noqa: E402
+except ImportError:  # pragma: no cover
+    raise SystemExit("IfcOpenShell saknas i den här Python-installationen (%s).\n"
+                     "Installera i en vanlig Python 3.11/3.12 (inte MicroStations):\n"
+                     "  python -m venv .venv && .venv\\Scripts\\activate\n"
+                     "  python -m pip install ifcopenshell ifctester pystache numpy" % __import__("sys").executable)
 import ifcopenshell.util.element  # noqa: E402
 
 from microstation.create_itemtypes import ITEM_TYPES  # noqa: E402
