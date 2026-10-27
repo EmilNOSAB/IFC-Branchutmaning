@@ -84,11 +84,16 @@ class TrackGeometry:
         self.cant = CantProfile(alignment.cant)
         self.sta_start = alignment.sta_start
         self.sta_end = alignment.sta_end
+        # optional linear elevation correction z += a + b * (station - sta_start),
+        # used for branch_profile = adapt_to_main (see model/railway_model.py)
+        self.z_correction: Tuple[float, float] = (0.0, 0.0)
 
     def elevation(self, station: float) -> Tuple[float, float]:
         if self.profile is None:
             return 0.0, 0.0
-        return self.profile.evaluate(station)
+        z, g = self.profile.evaluate(station)
+        a, b = self.z_correction
+        return z + a + b * (station - self.sta_start), g + b
 
     def frame(self, station: float) -> TrackFrame:
         h = self.horizontal.evaluate(station)
