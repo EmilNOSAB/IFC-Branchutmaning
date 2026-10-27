@@ -1,8 +1,8 @@
-"""Analyses the raw IFC written by MicroStation's exporter (before any post step).
+"""Analyses the IFC written by MicroStation's exporter (read only; the file is the deliverable).
 
-    python export/inspect_bentley_export.py [--ifc output/Branschutmaningen_2026_bentley_export.ifc]
+    python export/inspect_bentley_export.py [--ifc output/Branschutmaningen_2026.ifc]
 
-Answers the questions that decide how much post-processing is needed:
+Answers what the exporter made of the DGN content, so the DGN/SchemaMapping can be adjusted:
 * which IFC class and PredefinedType did every DGN element get (vs. the
   IfcEntity/IfcPredefinedType Item Type values)?  how many proxies?
 * under which names and with which IFC data types were the Item Types
@@ -101,7 +101,7 @@ def analyse(path: str) -> dict:
     for p in f.by_type("IfcProject"):
         walk(p, 0)
     out["spatial_tree"] = tree[:200]
-    out["post_step_needed_for"] = [k for k, v in {
+    out["missing_in_export"] = [k for k, v in {
         "classes": out["class_mismatches"] > 0,
         "railway_parts": "IfcRailwayPart" not in out["product_counts"],
         "containment_in_parts": not any(k.startswith("IfcRailwayPart") for k in cont),
@@ -117,7 +117,7 @@ def analyse(path: str) -> dict:
 def main(argv=None):
     cfg = load_config()
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ifc", default=cfg.file("ifc_bentley_export"))
+    ap.add_argument("--ifc", default=cfg.file("ifc_output"))
     ap.add_argument("--out", default=repo_path("output/bentley_export_analysis.json"))
     a = ap.parse_args(argv)
     r = analyse(a.ifc)
@@ -126,8 +126,8 @@ def main(argv=None):
         json.dump(r, fh, ensure_ascii=False, indent=1, default=str)
     print("Exportanalys: %s" % a.out)
     print("Klasser: %s" % r["product_counts"])
-    print("Klassavvikelser mot Item Types: %d, efterbearbetning behövs för: %s" % (
-        r["class_mismatches"], ", ".join(r["post_step_needed_for"]) or "-"))
+    print("Klassavvikelser mot Item Types: %d, saknas i exporten: %s" % (
+        r["class_mismatches"], ", ".join(r["missing_in_export"]) or "-"))
     return r
 
 

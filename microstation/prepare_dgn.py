@@ -1,7 +1,7 @@
 """Creates the output DGN from the configured 3D seed file (copy of the seed, as
 MicroStation's File > New does).  Runs with plain Python or inside MicroStation.
 
-    python microstation/prepare_dgn.py [--seed <seed.dgn>] [--force]
+    python microstation/prepare_dgn.py [--seed <seed.dgn>] [--force] [--out <file.dgn>]
     python load "<repo>\\microstation\\prepare_dgn.py"
 
 Seed resolution: --seed, then ``files.dgn_seed`` in config/model_config.yaml,
@@ -47,10 +47,11 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--seed")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--out", help="output DGN (default files.dgn_output), e.g. output/probe/BU26_probe.dgn")
     a, _ = ap.parse_known_args(argv if argv is not None else sys.argv[1:])
     cfg = load_config()
     seed = resolve_seed(cfg, a.seed)
-    out = cfg.file("dgn_output")
+    out = repo_path(a.out) if a.out else cfg.file("dgn_output")
     if not os.path.isfile(seed):
         raise SystemExit("Seed file not found: %s" % seed)
     if os.path.exists(out):
@@ -67,7 +68,8 @@ def main(argv=None):
             raise SystemExit("The output DGN is the active file - close it before --force")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     shutil.copyfile(seed, out)
-    print("Skapad från seed %s:\n  %s\nÖppna filen i MicroStation (File > Open) och kör build_railway_dgn.py." % (seed, out))
+    print("Skapad från seed %s:\n  %s\nÖppna filen i MicroStation (File > Open) och kör %s." % (
+        seed, out, "probe_exporter.py" if a.out else "build_railway_dgn.py"))
     return out
 
 

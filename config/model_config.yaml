@@ -18,7 +18,8 @@ files:
   model_name: Default
   model_report: output/model_report.json
   dgn_validation_report: output/dgn_validation_report.json
-  ifc_bentley_export: output/Branschutmaningen_2026_bentley_export.ifc
+  # The IFC written by MicroStation's own exporter is the deliverable; it is
+  # validated as it is and never modified.
   ifc_output: output/Branschutmaningen_2026.ifc
   validation_report_html: output/validation_report.html
   validation_report_json: output/validation_report.json
@@ -52,8 +53,13 @@ coordinate_system:
   ifc_vertical_datum: RH 2000
   # Bentley GCS key names tried in order (verify with microstation/inspect_environment.py)
   # SWEREF1999-18-00 verified in MicroStation 2026 (EPSG 3011 resolves to this key)
+  # Tried first: EPSG 5850 = SWEREF 99 18 00 + RH 2000 (compound, carries the
+  # vertical datum the IDS asks for).  If the GCS library refuses it, the key
+  # names and finally epsg_horizontal are used.
+  epsg_try_first: [5850]
   bentley_gcs_keynames: [SWEREF1999-18-00, SWEREF99-1800, SWEREF99-18-00]
   bentley_vertical_datum_key: ""
+  bentley_vertical_datum_keys: []
   # Model origin used for IfcSite.RefLatitude/RefLongitude/RefElevation.
   # "auto" = start point of the first main alignment.
   site_reference_point: auto

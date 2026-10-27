@@ -64,3 +64,25 @@ def test_mesh_elements_are_triangulated_and_boxes_native(tmp_path):
     assert kinds["BALLAST"] == {"mesh"} and kinds["RAIL_MAIN"] == {"mesh"}
     assert kinds["ALIGNMENT"] == {"linestring"}
     assert kinds["SPATIAL_RAILWAYPART_PLAIN"] == {"shape"}
+
+
+def test_probe_runs_on_recording_backend(tmp_path, cfg):
+    """The exporter probe (microstation/probe_exporter.py) places every probe
+    object and classifies cell children; pick list spelling is applied."""
+    from microstation.probe_exporter import Probe
+    be = RecordingBackend()
+    be.bentley_ifc = {"library": "IFC Classification", "item_type": "IFC Classification",
+                      "properties": {"version": "Version", "class": "Class", "type": "Type"},
+                      "picklists": {"version": ["IFC2x3", "IFC4x3"], "class": ["IfcRail", "IFCRAILWAYPART"]}}
+    rep = Probe(be, cfg, log=lambda *a: None, mapping_out=str(tmp_path / "m.json")).run()
+    assert rep["errors"] == []
+    assert set(rep["created"]) == {"P%02d" % i for i in range(1, 13)}
+    assert rep["created"]["P03"]["read_back"] == ["P03-c1", "P03-c2"]
+    assert rep["created"]["P05"]["read_back"] == ["P05-part"]
+    cells = [e for e in be.elements if e.kind == "cell"]
+    part = next(c for c in cells if c.items["BU26_Probe"]["ProbeId"] == "P03")
+    assert part.items["IFC Classification"]["values"] == {"Version": "IFC4x3", "Class": "IFCRAILWAYPART",
+                                                          "Type": "PLAINTRACK"}
+    assert "class=IfcTrackElement is not in Bentley's pick list" in rep["warnings"]
+    assert be.groups["P10 Group"]
+    assert '"ProcessGroupingElements": "true"' in open(str(tmp_path / "m.json"), encoding="utf-8").read()

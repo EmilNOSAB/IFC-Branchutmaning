@@ -32,25 +32,34 @@ Element i varje IfcRailwayPart: IfcRail (RAIL/STOCKRAIL/CHECKRAIL/BLADE), IfcTra
 | Spatiala objekt | bärarelement på nivån `BU26_SPATIAL` (fotavtryck eller markör) | samma Item Types |
 | Linjeföringar | 3D-linjesträngar på `BU26_ALIGNMENT` | `BU26_Object` + LandXML |
 
-Item Type-värden som `SpatialParent` är **metadata**. De skapar inga IFC-relationer av sig själva.
+Item Type-värden som `SpatialParent` är **metadata**. De skapar inga IFC-relationer av sig själva. Relationer kan bara uppstå om exportören översätter en DGN-struktur (cell, grupp, klassning) till dem, och det avgör provet.
 
 ## Vem som skapar vad
 
-| Relation / objekt | MicroStation-exportören (förväntat, verifieras V-08 – V-10) | Efterbearbetning (`export/complete_ifc_structure.py`) |
-|---|---|---|
-| IfcProject, IfcSite, IfcRelAggregates Project→Site | Ja (ProjectConfigurations) | Attribut, RefLat/Long/Elev, OwnerHistory, Pset_SpaceCommon |
-| Elementklasser | Ja, när "IFC Classification" finns | Klassar om proxys/fel klass utifrån `BU26_Object` |
-| IfcRelContainedInSpatialStructure | Troligen till IfcSite eller annan standardbehållare | Flyttar till rätt IfcRailwayPart |
-| IfcRailway/IfcRailwayPart som spatial struktur | Okänt (V-10) | Skapas eller återanvänds och aggregeras |
-| IfcRelAggregates Part→Assembly | Nej (inte uttryckbart i DGN) | Skapas |
-| IfcBuiltSystem + IfcRelAssignsToGroup | Nej (IfcGroup utan geometri; `ProcessGroupingElements=false`) | Skapas |
-| IfcRelAssociatesClassification | Okänt (Item Types blir troligen Psets) | Skapas (IfcClassification per system) |
-| IfcRelDefinesByProperties | Ja (Item Types → Psets) | Ersätter med typade Psets och IfcElementQuantity |
-| IfcAlignment | Nej i vanlig MicroStation (OpenRail har civil-API) | Skapas från LandXML med horisontal-, vertikal- och cant-layout samt geometri |
-| Georeferering | Från DGN:ens GCS (om satt) | IfcProjectedCRS EPSG:3011 / RH 2000. Offset mäts mellan IFC och SWEREF. |
+IFC-filen skapas enbart av MicroStations exportör. Därför avgör DGN-innehållet och SchemaMapping allt. Tabellen nedan visar status per DGN-konstruktion.
 
-Efterbearbetningen skapar **ingen fysisk geometri**. Varje fysiskt element måste redan finnas i exportfilen, och den behåller exportörens GlobalId. Ersatta bärare och alignment får bärarens GlobalId.
+* **Verifierat** = sett i den första riktiga exporten (MicroStation 2026). Den gav **1/22** IDS-krav.
+* **Prov P0x** = provas av `microstation/probe_exporter.py`, se `docs/Korinstruktion_MicroStation.md` steg 2.
+
+| IFC-resultat | DGN-konstruktion | Status |
+|---|---|---|
+| IfcProject (Name) | `ProjectConfigurations.ProjectName` i SchemaMapping | Verifierat. LongName och Phase saknas, och exportören skriver en standardtext som Description. |
+| IfcSite (Name), Project→Site | `ProjectConfigurations.SiteName` | Verifierat. RefLatitude/RefLongitude räknas av exportören (fel värden i körning 1), och LongName saknas. |
+| Elementklass + PredefinedType | Bentleys "IFC Classification" (importeras nu automatiskt) | Dokumenterat av Bentley. I körning 1 saknades biblioteket och allt blev IfcBuildingElementProxy. Prov P01. |
+| IfcRailwayPart / IfcRailway som spatial struktur | Klassat element (P02) eller cell (P03–P05) | Ej verifierat |
+| IfcRelContainedInSpatialStructure i spårdel | Element som barn i en klassad cell (P03/P04) | Ej verifierat. I körning 1 låg allt i IfcSite. |
+| IfcRelAggregates spårdel→växeldriv | Cell IfcElementAssembly (P06) | Ej verifierat |
+| IfcAlignment | Klassad 3D-linjesträng (P07) | Ej verifierat. Nästade horisontal-, vertikal- och cant-layouter kan bara en civil-exportör (OpenRail) skapa. |
+| IfcSpatialZone | Klassat element (P08) | Ej verifierat |
+| IfcBuiltSystem + IfcRelAssignsToGroup | Klassat element (P09), Named Group med `ProcessGroupingElements=true` (P10) | Ej verifierat |
+| IfcRelDefinesByProperties (Pset) | Item Type med samma namn som Pset:en | Verifierat (Item Type-namn = Pset-namn). Uppräkningsegenskaper skrivs med gemener och fel typ (IFCTIME). |
+| Måttyper (IfcLengthMeasure …) | Item Type-egenskap med enhet (`SetUnits`, P01) | Ej verifierat. Utan enhet blir det IfcReal (verifierat). |
+| IfcElementQuantity (Qto) | Item Type `Qto_*` med enheter (P11) | Ej verifierat. I körning 1 blev det IfcPropertySet med IfcReal. |
+| IfcClassificationReference (CoClass) | Ingen känd DGN-konstruktion (P12 provar två Item Type-former) | Ej verifierat. Körning 1 innehöll inga referenser. |
+| IfcProjectedCRS + IfcMapConversion | DGN:ens GCS | Verifierat: EPSG:3011, absoluta koordinater. VerticalDatum blev "SWEREF1999". Därför provas EPSG 5850 (+ RH 2000). |
+
+Det som provet visar att exportören inte kan skapa går inte att få in i en oförändrad export från vanliga MicroStation. Kvar finns då två vägar: OpenRail Designer (civil-geometri och dess IFC-exportör) eller att acceptera att kravet inte uppfylls.
 
 ## Kontroll
 
-`validation/validate_ifc.py` kontrollerar alla IDS-relationer (partOf) och dessutom: proxys, element utan rumslig relation, antal och typ av IfcRailwayPart, gruppmedlemmar i IfcBuiltSystem, IfcElementQuantity, CRS/MapConversion, enheter och IFC-schemats regler (`ifcopenshell.validate`).
+`validation/validate_ifc.py` läser exportfilen utan att ändra den och kontrollerar alla IDS-relationer (partOf) och dessutom: proxys, element utan rumslig relation, antal och typ av IfcRailwayPart, gruppmedlemmar i IfcBuiltSystem, IfcElementQuantity, CRS/MapConversion, enheter och IFC-schemats regler (`ifcopenshell.validate`).

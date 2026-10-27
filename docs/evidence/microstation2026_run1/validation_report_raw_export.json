@@ -1,0 +1,1375 @@
+{
+ "generated": "2026-10-27T21:35:03",
+ "ifc": "output/Branschutmaningen_2026_bentley_export.ifc (MicroStation 2026, körning 1)",
+ "ids": "input/Branschutmaningen_2026.ids",
+ "ifc_application": null,
+ "total_specifications": 22,
+ "passed": 1,
+ "failed": 21,
+ "passed_specs": [
+  "#20 IfcSIUnit "
+ ],
+ "failed_specs": [
+  "#1 IfcProject standard attribut",
+  "#2 IfcSite standard attribut",
+  "#3 IfcSpatialZone standard attribut inklusive predefinedType",
+  "#4 IfcAligment standard attribut inklusive PredefinedType",
+  "#5 IfcRailway standard attribut inklusive PredefinedType och ObjectType",
+  "#6 IfcRailwayPart.PLAINTRACK med standard attribut och PredefinedType",
+  "#7 IfcRail.RAIL",
+  "#8 IfcRailwayPart.TURNOUTTRACK",
+  "#9 IfcTrackElement.SLEEPER",
+  "#10 IfcRail.RAIL",
+  "#11 IfcElementAssembly.TRACTION_SWITCHING_ASSEMBLY",
+  "#12 IfcRail.STOCKRAIL",
+  "#13 IfcRail.CHECKRAIL",
+  "#14 IfcTrackElement.FROG",
+  "#15 IfcBuiltSystem.RAILWAYTRACK",
+  "#16 IfcRail.RAIL",
+  "#17 IfcTrackElement.SLEEPER",
+  "#18 Qto_CourseBaseQuantities basmängder ",
+  "#19 Qto_SleeperBaseQuantities basmängder ",
+  "#21 IfcProjectedCRS",
+  "#22 IfcCourse"
+ ],
+ "failed_specs_only_due_to_ids_conflicts": [],
+ "missing_entities": [
+  "#3 IfcSpatialZone standard attribut inklusive predefinedType",
+  "#4 IfcAligment standard attribut inklusive PredefinedType",
+  "#5 IfcRailway standard attribut inklusive PredefinedType och ObjectType",
+  "#6 IfcRailwayPart.PLAINTRACK med standard attribut och PredefinedType",
+  "#7 IfcRail.RAIL",
+  "#8 IfcRailwayPart.TURNOUTTRACK",
+  "#9 IfcTrackElement.SLEEPER",
+  "#10 IfcRail.RAIL",
+  "#11 IfcElementAssembly.TRACTION_SWITCHING_ASSEMBLY",
+  "#12 IfcRail.STOCKRAIL",
+  "#13 IfcRail.CHECKRAIL",
+  "#14 IfcTrackElement.FROG",
+  "#15 IfcBuiltSystem.RAILWAYTRACK",
+  "#16 IfcRail.RAIL",
+  "#17 IfcTrackElement.SLEEPER",
+  "#18 Qto_CourseBaseQuantities basmängder ",
+  "#19 Qto_SleeperBaseQuantities basmängder ",
+  "#22 IfcCourse"
+ ],
+ "failed_requirement_groups": {
+  "entity": 9,
+  "attribute": 31,
+  "property": 16,
+  "quantity": 9,
+  "classification": 15,
+  "partof": 15
+ },
+ "ids_conflicts": [
+  {
+   "spec_a": "#7 IfcRail.RAIL",
+   "spec_b": "#10 IfcRail.RAIL",
+   "applicability": "IFCRAIL.RAIL",
+   "reasons": [
+    "IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK"
+   ]
+  },
+  {
+   "spec_a": "#7 IfcRail.RAIL",
+   "spec_b": "#16 IfcRail.RAIL",
+   "applicability": "IFCRAIL.RAIL",
+   "reasons": [
+    "attribute Description: 'innerräl' vs 'ytterräl'"
+   ]
+  },
+  {
+   "spec_a": "#9 IfcTrackElement.SLEEPER",
+   "spec_b": "#17 IfcTrackElement.SLEEPER",
+   "applicability": "IFCTRACKELEMENT.SLEEPER",
+   "reasons": [
+    "IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK"
+   ]
+  },
+  {
+   "spec_a": "#10 IfcRail.RAIL",
+   "spec_b": "#16 IfcRail.RAIL",
+   "applicability": "IFCRAIL.RAIL",
+   "reasons": [
+    "IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.TURNOUTTRACK vs IFCRAILWAYPART.PLAINTRACK"
+   ]
+  }
+ ],
+ "structure": {
+  "schema": "IFC4X3_ADD2",
+  "projects": 1,
+  "proxies": 3477,
+  "railway_parts": [],
+  "railway_parts_ok": false,
+  "alignments": [],
+  "elements": 3477,
+  "elements_without_spatial_relation": 0,
+  "built_systems": [],
+  "classification_relations": 0,
+  "element_quantities": [],
+  "projected_crs": [
+   {
+    "name": "EPSG:3011",
+    "description": "SWEREF 99 18 00",
+    "vertical": "SWEREF1999"
+   }
+  ],
+  "map_conversion": [
+   {
+    "eastings": 0.0,
+    "northings": 0.0,
+    "height": 0.0
+   }
+  ],
+  "length_units": [
+   {
+    "name": "METRE",
+    "prefix": null
+   }
+  ],
+  "schema_validation_issues": 2,
+  "schema_validation_sample": [
+   "{'level': 'error', 'message': \"For instance:\\n    FILE_NAME('export.ifc','2026-10-27T16:20:57',('Branschutmaningen 2026'),('Branschutmaningen 2026'),'ODA SDAI 25.8',$,$)\\n                                                                                                                       ^   \\nAttr",
+   "{'level': 'error', 'message': \"For instance:\\n    FILE_NAME('export.ifc','2026-10-27T16:20:57',('Branschutmaningen 2026'),('Branschutmaningen 2026'),'ODA SDAI 25.8',$,$)\\n                                                                                                                         ^ \\nAttr"
+  ]
+ },
+ "specifications": [
+  {
+   "name": "#1 IfcProject standard attribut",
+   "status": false,
+   "applicable": 1,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The LongName shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": "1672PTK2r1F9vO1ViVGS9P",
+       "dgn_object_id": null,
+       "class": "IfcProject",
+       "predefined_type": null,
+       "name": "BH55",
+       "reason": "The attribute value \"None\" is empty"
+      }
+     ]
+    },
+    {
+     "description": "The Phase shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": "1672PTK2r1F9vO1ViVGS9P",
+       "dgn_object_id": null,
+       "class": "IfcProject",
+       "predefined_type": null,
+       "name": "BH55",
+       "reason": "The attribute value \"None\" is empty"
+      }
+     ]
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#2 IfcSite standard attribut",
+   "status": false,
+   "applicable": 1,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELAGGREGATES relationship with an IFCPROJECT",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The LongName shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": "2957pYsfj29eWKABO89ESH",
+       "dgn_object_id": null,
+       "class": "IfcSite",
+       "predefined_type": null,
+       "name": "KG55-OMR",
+       "reason": "The attribute value \"None\" is empty"
+      }
+     ]
+    },
+    {
+     "description": "The Description shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": "2957pYsfj29eWKABO89ESH",
+       "dgn_object_id": null,
+       "class": "IfcSite",
+       "predefined_type": null,
+       "name": "KG55-OMR",
+       "reason": "The attribute value \"None\" is empty"
+      }
+     ]
+    },
+    {
+     "description": "The RefLatitude shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The RefLongitude shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The RefElevation shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "GrossPlannedArea data shall be provided in the dataset Pset_SpaceCommon",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": "2957pYsfj29eWKABO89ESH",
+       "dgn_object_id": null,
+       "class": "IfcSite",
+       "predefined_type": null,
+       "name": "KG55-OMR",
+       "reason": "The required property set does not exist"
+      }
+     ]
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#3 IfcSpatialZone standard attribut inklusive predefinedType",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The LongName shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The PredefinedType shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#4 IfcAligment standard attribut inklusive PredefinedType",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The PredefinedType shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Station data may be provided in the dataset Pset_Stationing",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "HasIncreasingStation data may be provided in the dataset Pset_Stationing",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#5 IfcRailway standard attribut inklusive PredefinedType och ObjectType",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELAGGREGATES relationship with an IFCSITE",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_BV reference of CAE",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The PredefinedType shall be USERDEFINED",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The ObjectType shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The LongName shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#6 IfcRailwayPart.PLAINTRACK med standard attribut och PredefinedType",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELASSIGNSTOGROUP relationship with an IFCBUILTSYSTEM of predefined type RAILWAYTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELAGGREGATES relationship with an IFCRAILWAY",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KS reference of DA10",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The GlobalId shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The OwnerHistory shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "HasBallastTrack data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "HasCWR data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "IsSunExposed data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "TrackSupportingStructure data shall be SUBGRADELAYER and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#7 IfcRail.RAIL",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAIL data of type RAIL",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type PLAINTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be innerräl",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": [
+    "#10 IfcRail.RAIL (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK)",
+    "#16 IfcRail.RAIL (attribute Description: 'innerräl' vs 'ytterräl')"
+   ]
+  },
+  {
+   "name": "#8 IfcRailwayPart.TURNOUTTRACK",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAILWAYPART data of type TURNOUTTRACK",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELAGGREGATES relationship with an IFCRAILWAY",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELASSIGNSTOGROUP relationship with an IFCBUILTSYSTEM of predefined type RAILWAYTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KS reference of DA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "HasBallastTrack data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "HasCWR data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "IsSunExposed data shall be true and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "TrackSupportingStructure data shall be SUBGRADELAYER and in the dataset Pset_RailwayTrackStructurePart",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#9 IfcTrackElement.SLEEPER",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type PLAINTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of ULE14",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": [
+    "#17 IfcTrackElement.SLEEPER (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK)"
+   ]
+  },
+  {
+   "name": "#10 IfcRail.RAIL",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAIL data of type RAIL",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": [
+    "#7 IfcRail.RAIL (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK)",
+    "#16 IfcRail.RAIL (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.TURNOUTTRACK vs IFCRAILWAYPART.PLAINTRACK)"
+   ]
+  },
+  {
+   "name": "#11 IfcElementAssembly.TRACTION_SWITCHING_ASSEMBLY",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCELEMENTASSEMBLY data of type TRACTION_SWITCHING_ASSEMBLY",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELAGGREGATES relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of QSB",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "RatedVoltage data shall be provided in the dataset Pset_ElementAssemblyTypeTractionSwitchingAssembly",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "NominalPower data shall be provided in the dataset Pset_ElementAssemblyTypeTractionSwitchingAssembly",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#12 IfcRail.STOCKRAIL",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAIL data of type STOCKRAIL",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#13 IfcRail.CHECKRAIL",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAIL data of type CHECKRAIL",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#14 IfcTrackElement.FROG",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCTRACKELEMENT data of type FROG",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#15 IfcBuiltSystem.RAILWAYTRACK",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCBUILTSYSTEM data of type RAILWAYTRACK",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_FS reference of R",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The LongName shall be Polarexpress",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Name shall be Tvärbanan",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "TrackCharacteristic data shall be NORMAL and in the dataset Pset_BuiltSystemRailwayTrack",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "TrackNumber data shall be 5930 and in the dataset Pset_BuiltSystemRailwayTrack",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "TrackUsage data shall be MAINTRACK and in the dataset Pset_BuiltSystemRailwayTrack",
+     "facet": "Property",
+     "group": "property",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#16 IfcRail.RAIL",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Shall be IFCRAIL data of type RAIL",
+     "facet": "Entity",
+     "group": "entity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type PLAINTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of WRA20",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be ytterräl",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": [
+    "#7 IfcRail.RAIL (attribute Description: 'innerräl' vs 'ytterräl')",
+    "#10 IfcRail.RAIL (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.TURNOUTTRACK vs IFCRAILWAYPART.PLAINTRACK)"
+   ]
+  },
+  {
+   "name": "#17 IfcTrackElement.SLEEPER",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART of predefined type TURNOUTTRACK",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of ULE14",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": [
+    "#9 IfcTrackElement.SLEEPER (IFCRELCONTAINEDINSPATIALSTRUCTURE parent IFCRAILWAYPART.PLAINTRACK vs IFCRAILWAYPART.TURNOUTTRACK)"
+   ]
+  },
+  {
+   "name": "#18 Qto_CourseBaseQuantities basmängder ",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "GrossVolume data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Length data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Thickness data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Volume data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Weight data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Width data shall be provided in the dataset Qto_CourseBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#19 Qto_SleeperBaseQuantities basmängder ",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "Height data shall be provided in the dataset Qto_SleeperBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Length data shall be provided in the dataset Qto_SleeperBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Width data shall be provided in the dataset Qto_SleeperBaseQuantities",
+     "facet": "Property",
+     "group": "quantity",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#20 IfcSIUnit ",
+   "status": true,
+   "applicable": 1,
+   "applicable_pass": 1,
+   "requirements": [
+    {
+     "description": "The Prefix shall not be provided",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#21 IfcProjectedCRS",
+   "status": false,
+   "applicable": 1,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "The Name shall be {'enumeration': ['EPSG:5850', 'EPSG:3011']}",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The Description shall be {'enumeration': ['SWEREF 99 18 00 + RH 2000', 'SWEREF 99 18 00']}",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": true,
+     "failed": 0,
+     "passed": 1,
+     "failures": []
+    },
+    {
+     "description": "The VerticalDatum may be RH 2000",
+     "facet": "Attribute",
+     "group": "attribute",
+     "status": false,
+     "failed": 1,
+     "passed": 0,
+     "failures": [
+      {
+       "global_id": null,
+       "dgn_object_id": null,
+       "class": "IfcProjectedCRS",
+       "predefined_type": null,
+       "name": "EPSG:3011",
+       "reason": "The attribute value \"SWEREF1999\" does not match the requirement"
+      }
+     ]
+    }
+   ],
+   "ids_conflicts": []
+  },
+  {
+   "name": "#22 IfcCourse",
+   "status": false,
+   "applicable": 0,
+   "applicable_pass": 0,
+   "requirements": [
+    {
+     "description": "An element must have an IFCRELCONTAINEDINSPATIALSTRUCTURE relationship with an IFCRAILWAYPART",
+     "facet": "PartOf",
+     "group": "partof",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a {'enumeration': ['CoClass_PR', 'BSAB96_PR']} reference of CEB.3",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    },
+    {
+     "description": "Shall have a CoClass_KO reference of UTA10",
+     "facet": "Classification",
+     "group": "classification",
+     "status": false,
+     "failed": 0,
+     "passed": 0,
+     "failures": []
+    }
+   ],
+   "ids_conflicts": []
+  }
+ ]
+}

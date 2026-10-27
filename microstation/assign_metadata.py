@@ -65,24 +65,59 @@ def item_values(comp: Component, mode: str, source_file: str) -> List[Tuple[str,
     return items
 
 
+def _norm(text: str) -> str:
+    return "".join(ch for ch in str(text).upper() if ch.isalnum())
+
+
+def match_picklist(value: str, options: Optional[List[str]], role: str = "") -> Tuple[str, bool]:
+    """``value`` spelled as in Bentley's pick list.  Returns (value, matched).
+    Matching: exact, case-insensitive, ignoring separators; for the version also
+    any entry that contains 4X3 (IFC4X3_ADD2 ~ 'IFC4x3' / 'IFC 4.3')."""
+    if not options:
+        return value, True
+    if value in options:
+        return value, True
+    for o in options:
+        if o.lower() == str(value).lower():
+            return o, True
+    nv = _norm(value)
+    for o in options:
+        if _norm(o) == nv:
+            return o, True
+    if role == "version":
+        for o in options:
+            if "4X3" in _norm(o) or "43" in _norm(o):
+                return o, True
+    return value, False
+
+
 def bentley_ifc_values(comp: Component, found: Optional[Dict[str, Any]], version_value: str,
                        apply_to: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
-    """Values for Bentley's delivered 'IFC Classification' Item Type."""
+    """Values for Bentley's delivered 'IFC Classification' Item Type, spelled as
+    in its pick lists when they could be read (unmatched values are kept as
+    given and listed in ``unmatched``)."""
     if not found or (apply_to is not None and comp.ifc_entity not in apply_to):
         return None
     props = found.get("properties", {})
-    values = {}
-    if "version" in props:
-        values[props["version"]] = version_value
-    if "class" in props:
-        values[props["class"]] = comp.ifc_entity
+    lists = found.get("picklists", {})
+    values, unmatched = {}, []
     pdt = comp.predefined_type or comp.attributes.get("PredefinedType")
-    if "type" in props and pdt:
-        values[props["type"]] = pdt
-    return {"library": found["library"], "item_type": found["item_type"], "values": values}
+    for role, wanted in (("version", version_value), ("class", comp.ifc_entity), ("type", pdt)):
+        if role not in props or not wanted:
+            continue
+        v, ok = match_picklist(wanted, lists.get(role), role)
+        values[props[role]] = v
+        if not ok:
+            unmatched.append("%s=%s" % (role, wanted))
+    out = {"library": found["library"], "item_type": found["item_type"], "values": values}
+    if unmatched:
+        out["unmatched"] = unmatched
+    return out
 
 
 def attach(backend, element, comp: Component, library: str, mode: str, source_file: str,
-           bentley_found: Optional[Dict[str, Any]], version_value: str, apply_to: Optional[List[str]] = None) -> None:
-    backend.attach_items(element, library, item_values(comp, mode, source_file),
-                         bentley_ifc_values(comp, bentley_found, version_value, apply_to))
+           bentley_found: Optional[Dict[str, Any]], version_value: str,
+           apply_to: Optional[List[str]] = None) -> Optional[Dict[str, Any]]:
+    bic = bentley_ifc_values(comp, bentley_found, version_value, apply_to)
+    backend.attach_items(element, library, item_values(comp, mode, source_file), bic)
+    return bic

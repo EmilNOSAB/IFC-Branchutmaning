@@ -47,10 +47,17 @@ class DgnBackend:
     def ensure_levels(self, levels: Dict[str, Dict[str, Any]]) -> Dict[str, int]:
         raise NotImplementedError
 
-    def ensure_item_types(self, library: str, spec: Dict[str, Sequence[Tuple[str, str]]]) -> Dict[str, Any]:
+    def ensure_item_types(self, library: str, spec: Dict[str, Sequence[Tuple[str, str]]],
+                          units: Optional[Dict[Tuple[str, str], str]] = None,
+                          units_cfg: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         raise NotImplementedError
 
     def find_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        raise NotImplementedError
+
+    def ensure_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+        """Find Bentley's 'IFC Classification' Item Type in the DGN, importing it
+        from IFC_Classes_Types.dgnlib first if needed.  Returns (found, report)."""
         raise NotImplementedError
 
     def purge_generated(self, library: str, marker_item_type: str) -> int:
@@ -108,6 +115,7 @@ class RecordingBackend(DgnBackend):
         self._next_id = 1000
         self._pending: Optional[ElementRecord] = None
         self.saved = False
+        self.bentley_ifc: Optional[Dict[str, Any]] = None
 
     def environment(self) -> Dict[str, Any]:
         return {"backend": self.name, "microstation": None}
@@ -125,13 +133,18 @@ class RecordingBackend(DgnBackend):
             out[name] = self.levels[name]["id"]
         return out
 
-    def ensure_item_types(self, library, spec):
+    def ensure_item_types(self, library, spec, units=None, units_cfg=None):
         for it, props in spec.items():
             self.item_types[it] = list(props)
-        return {"library": library, "item_types": sorted(spec)}
+        self.units = {"%s.%s" % k: v for k, v in (units or {}).items()}
+        return {"library": library, "item_types": sorted(spec), "units": self.units}
 
     def find_bentley_ifc_classification(self, cfg):
-        return None
+        return self.bentley_ifc
+
+    def ensure_bentley_ifc_classification(self, cfg):
+        """No dgnlib outside MicroStation; tests may set ``bentley_ifc``."""
+        return self.bentley_ifc, {"present_before": bool(self.bentley_ifc), "import": "not available (dry run)"}
 
     def purge_generated(self, library, marker_item_type):
         n = len(self.elements)
@@ -178,6 +191,25 @@ class RecordingBackend(DgnBackend):
 
     def element_id(self, element):
         return element.element_id
+
+    def add_cell(self, name, children, level_id, add=True):
+        rec = self._add("cell", level_id, 0, 0, {"name": name, "children": len(children)})
+        rec.children = list(children)
+        for ch in children:
+            if ch in self.elements:
+                self.elements.remove(ch)
+        if not add:
+            self.elements.remove(rec)
+        return rec
+
+    def for_each_cell_child(self, cell, fn):
+        for i, ch in enumerate(getattr(cell, "children", [])):
+            fn(i, ch)
+        return len(getattr(cell, "children", []))
+
+    def get_item_value(self, element, library, item_type, prop):
+        v = element.items.get(item_type, {}).get(prop)
+        return None if v is None else str(v)
 
     def create_named_group(self, name, description, element_ids):
         self.groups[name] = list(element_ids)

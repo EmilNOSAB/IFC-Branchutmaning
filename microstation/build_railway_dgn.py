@@ -43,7 +43,8 @@ from microstation import (create_ballast, create_rails, create_sleepers, create_
                           create_turnout)
 from microstation.backend import BackendError, RecordingBackend  # noqa: E402
 from microstation.context import BuildContext  # noqa: E402
-from microstation.create_itemtypes import ITEM_TYPES, MARKER_ITEM_TYPE, check_spec_against_mapping  # noqa: E402
+from microstation.create_itemtypes import (ITEM_TYPES, MARKER_ITEM_TYPE, check_spec_against_mapping,  # noqa: E402
+                                           create_item_types)
 from microstation.create_levels import create_levels  # noqa: E402
 from model.railway_model import RailwayModelBuilder  # noqa: E402
 
@@ -199,14 +200,22 @@ def run(argv=None, backend=None, log=print) -> dict:
 
     # 7. item types
     step("7. Item Types")
-    report["item_types"] = backend.ensure_item_types(library, ITEM_TYPES)
+    report["item_types"] = create_item_types(backend, library, cfg.mapping)
     bic = cfg.mapping["bentley_ifc_classification"]
-    found = backend.find_bentley_ifc_classification(bic) if bic.get("enabled", True) else None
+    found, bic_rep = backend.ensure_bentley_ifc_classification(bic) if bic.get("enabled", True) else (None, {})
+    report["bentley_ifc_classification_import"] = bic_rep
     report["bentley_ifc_classification"] = found or (
-        "NOT FOUND - import %s into the DGN (Item Types dialog > Import) to let the Bentley exporter "
-        "classify the elements; see docs/Korinstruktion_MicroStation.md" % bic["dgnlib_file"])
+        "NOT FOUND - %s could not be imported automatically (see bentley_ifc_classification_import). Import it "
+        "in the Item Types dialog (Libraries > Import) and run the build again; without it the exporter writes "
+        "IfcBuildingElementProxy" % bic["dgnlib_file"])
     if not found:
-        report["warnings"].append("Bentley 'IFC Classification' Item Type not present in the DGN")
+        (report["errors"] if is_ms else report["warnings"]).append(
+            "Bentley 'IFC Classification' Item Type not present in the DGN - the export will contain only "
+            "IfcBuildingElementProxy")
+        log("FEL: Bentleys 'IFC Classification' saknas i DGN:en: %s" % bic_rep)
+    else:
+        log("  IFC Classification: %s / %s, egenskaper %s" % (found["library"], found["item_type"],
+                                                               found["properties"]))
     done("7. Item Types")
 
     ctx = BuildContext(cfg=cfg, backend=backend, level_ids=level_ids, library=library, mode=cfg.mode,
@@ -242,10 +251,14 @@ def run(argv=None, backend=None, log=print) -> dict:
     report["model_check_after_build"] = basic_model_check(ctx, design)
     done("11. Modellkontroll")
 
+    report["bentley_picklist_misses"] = ctx.picklist_misses
+    if ctx.picklist_misses:
+        report["warnings"].append("IFC class/type values not in Bentley's pick lists (exporter may not know them): %s"
+                                  % ctx.picklist_misses)
     report["created_by_category"] = ctx.counts
     report["created_total"] = sum(ctx.counts.values())
     report["timings_s"] = dict(timings, **{"placement:" + k: round(v, 3) for k, v in ctx.timings.items()})
-    report["errors"] = ctx.errors
+    report["errors"] = report["errors"] + ctx.errors
     report["element_ids"] = ctx.element_ids
     report["total_time_s"] = round(time.perf_counter() - t_all, 3)
     out = args.report or (cfg.file("model_report") if is_ms else

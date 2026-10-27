@@ -1,7 +1,7 @@
 """TEST FIXTURE - simulated exporter output, NOT produced by Bentley software.
 
 Creates an IFC4X3_ADD2 file that looks like what a generic DGN->IFC export of
-the generated DGN could contain, so that export/complete_ifc_structure.py and
+the generated DGN could contain, so that export/inspect_bentley_export.py and
 validation/validate_ifc.py can be tested without MicroStation:
 
 * every DGN element (incl. spatial carriers and alignment lines) becomes one
@@ -14,7 +14,7 @@ validation/validate_ifc.py can be tested without MicroStation:
   generically typed values (IfcLabel / IfcReal / IfcBoolean / IfcInteger)
 * geometry: triangulated face sets (solids) and polylines, absolute
   coordinates or shifted by ``shift`` (local engineering origin, no map
-  conversion) to test the georeferencing repair.
+  conversion).
 
 The application name in the header says "SIMULATED" so the file can never be
 mistaken for an exporter result.
@@ -33,6 +33,7 @@ if ROOT not in sys.path:
 
 import ifcopenshell  # noqa: E402
 import ifcopenshell.guid  # noqa: E402
+import ifcopenshell.util.schema  # noqa: E402
 
 from common.config import Config  # noqa: E402
 from microstation.assign_metadata import bentley_ifc_values, item_values  # noqa: E402
@@ -51,6 +52,7 @@ def _value(f, v):
     return f.createIfcLabel("" if v is None else str(v))
 
 
+_SCHEMA = ifcopenshell.ifcopenshell_wrapper.schema_by_name("IFC4X3_ADD2")
 MS2026_ENUMERATED = {"TrackSupportingStructure", "TrackUsage", "TrackCharacteristic"}
 
 
@@ -105,6 +107,8 @@ def simulate(cfg: Config, design: DesignModel, path: str, classified: bool = Tru
             reps.append(f.createIfcShapeRepresentation(axis, "Axis", "Curve3D", [pl]))
         bic = bentley_ifc_values(comp, found, "IFC4X3_ADD2", apply_to)
         ifc_class = comp.ifc_entity if (classified and bic) else "IfcBuildingElementProxy"
+        if not ifcopenshell.util.schema.is_a(_SCHEMA.declaration_by_name(ifc_class), "IfcProduct"):
+            ifc_class = "IfcBuildingElementProxy"  # e.g. IfcBuiltSystem (a group) cannot carry geometry
         el = f.create_entity(ifc_class, GlobalId=ifcopenshell.guid.new(), OwnerHistory=oh, Name=comp.name,
                              ObjectPlacement=f.createIfcLocalPlacement(site_pl, origin),
                              Representation=f.createIfcProductDefinitionShape(None, None, reps) if reps else None)

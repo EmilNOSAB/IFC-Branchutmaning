@@ -39,6 +39,19 @@ Reference summary (module.Class.method - source page)
       ToModel(modelRef, primary, writeToFile, reproject, reportProblems)                  - DgnGCS
   MSPyDgnPlatform.BaseGCS.CreateGCS(), InitFromEPSGCode(code), GetEPSGCode, GetName       - BaseGCS
   MSPyDgnPlatform.ConfigurationManager.GetVariable(WString, name)                          - ConfigurationManager
+  MSPyDgnPlatform.DgnDocument.CreateForLocalFile(fileName)                                 - DgnDocument
+  MSPyDgnPlatform.DgnFile(document, DgnFileOpenMode.eReadOnly), LoadDgnFile() -> tuple,
+      FillDictionaryModel()                                    - Bentley pdf/05 "Create New DgnFile"
+  MSPyDgnPlatform.ItemTypeLibrary.CloneForFile(destFile, forReplacement=False), Write()     - ItemTypeLibrary
+  MSPyDgnPlatform.ItemType.GetPropertyCount/GetPropertyById, CustomProperty.GetPickListName(ECValue),
+      SupportsUnits(), SetUnits(DgnECUnit)                                                 - ItemType / CustomProperty
+  MSPyECObjects.DgnECUnit.FromID(id), IsSpecified()                                       - DgnECUnit
+  MSPyDgnPlatform.PickListLibrary.CreatePickListLibrary(), GetPickListLibFromDgn(file, lib),
+      SavePickListLibToDgn(file, lib, update), GetPickListByName(WString),
+      PickList.GetValueCount/CanFindValueById/GetPickListValueByID, PickListValue.GetValue - PickList*
+  MSPyDgnPlatform.NormalCellHeaderHandler.CreateOrphanCellElement(eeh, name, is3d, modelRef),
+      AddChildElement(eeh, childEeh), AddChildComplete(eeh)                               - NormalCellHeaderHandler
+  MSPyDgnPlatform.ChildEditElemIter(parent, ExposeChildrenReason.eEdit), ToNext(), IsValid() - ChildEditElemIter
 """
 
 from __future__ import annotations
@@ -55,7 +68,10 @@ REQUIRED = ["WString", "CurveVector", "DgnBoxDetail", "DPoint3d", "DVec3d", "ISo
             "ECValue", "BaseGCS", "ConfigurationManager", "CustomItemHost", "CustomProperty", "DgnGCS",
             "DraftingElementSchema", "EditElementHandle", "ElementPropertiesSetter", "ItemTypeLibrary", "NamedGroup",
             "NamedGroupFlags", "NamedGroupMemberFlags", "ISessionMgr", "PyCadInputQueue"]
-OPTIONAL = ["Int32Array", "DPoint3dArray", "LineStringHandler", "ShapeHandler"]
+OPTIONAL = ["Int32Array", "DPoint3dArray", "LineStringHandler", "ShapeHandler",
+            # importing Bentley's IFC Classification from IFC_Classes_Types.dgnlib, units, cells
+            "DgnDocument", "DgnFile", "DgnFileOpenMode", "PickListLibrary", "DgnECUnit",
+            "NormalCellHeaderHandler", "ChildEditElemIter", "ExposeChildrenReason"]
 MISSING_SYMBOLS: List[str] = []
 try:
     import MSPyBentley
@@ -127,6 +143,30 @@ def property_types() -> Dict[str, Any]:
     return out
 
 
+def dgnlib_candidates(file_name: str, config_values: Sequence[str]) -> List[str]:
+    """Directories where Bentley's ``file_name`` may live, derived from
+    configuration variable values (MS_DGNLIBLIST_ITEMTYPES, MS_DGNLIBLIST,
+    MSDIR ...).  Entries may be folders, files or wildcard patterns separated by
+    ';'.  Each folder is tried as is and with an ``ItemTypes`` subfolder (the
+    delivered location is <MSDIR>\\Default\\Dgnlib\\ItemTypes).  No
+    installation path is hard-coded."""
+    import ntpath
+    import os
+    dirs: List[str] = []
+    for value in config_values:
+        for entry in (value or "").split(";"):
+            entry = entry.strip().strip('"')
+            if not entry:
+                continue
+            if "*" in entry or "?" in entry or entry.lower().endswith(".dgnlib"):
+                entry = ntpath.dirname(entry) if "\\" in entry else os.path.dirname(entry)
+            entry = entry.rstrip("\\/")
+            for d in (entry, entry + "\\ItemTypes", entry + "\\Default\\Dgnlib\\ItemTypes"):
+                if d not in dirs:
+                    dirs.append(d)
+    return [d + "\\" + file_name for d in dirs]
+
+
 def create_item_type_library(name: str, dgn_file):
     """Bentley pdf/24: ``ItemTypeLibrary.Create(name, dgnFile, False)``.  The
     reference page lists no factory, so the constructor form is tried too.
@@ -183,6 +223,8 @@ class MicroStationBackend(DgnBackend):
         if not _ok(status):
             raise BackendError("DraftingElementSchema.ToElement failed for %s (status %s)" % (what, status))
         self._symbology(eeh, level_id, color, weight)
+        if getattr(self, "hold_elements", False):
+            return eeh  # not added: becomes a child of a cell (add_cell)
         st = eeh.AddToModel()
         if not _ok(st):
             raise BackendError("AddToModel failed for %s (status %s)" % (what, st))
@@ -212,8 +254,43 @@ class MicroStationBackend(DgnBackend):
             out["master_unit_error"] = str(e)
         return out
 
+    def _gcs_from_epsg(self, code: int, tried: list):
+        try:
+            base = BaseGCS.CreateGCS()
+            res = base.InitFromEPSGCode(int(code))
+            if _ok(res[0] if isinstance(res, tuple) else res):
+                return DgnGCS.CreateGCS(base, self.model_ref)
+            tried.append(("EPSG:%s" % code, str(res)))
+        except Exception as e:
+            tried.append(("EPSG:%s" % code, "exception %s" % e))
+        return None
+
+    def _write_gcs(self, gcs, cs_cfg, tried, **extra):
+        for vkey in [cs_cfg.get("bentley_vertical_datum_key")] + list(cs_cfg.get("bentley_vertical_datum_keys", [])):
+            if vkey:
+                try:
+                    tried.append(("vertical:" + vkey, gcs.SetVerticalDatumByKey(vkey)))
+                except Exception as e:
+                    tried.append(("vertical:" + vkey, "exception %s" % e))
+        st = gcs.ToModel(self.model_ref, True, True, False, False)
+        out = {"status": "ok" if _ok(st) else "ToModel status %s" % st,
+               "epsg": gcs.GetEPSGCode(False), "name": str(gcs.GetName()), "tried": tried}
+        for getter in ("GetVerticalDatumName", "GetVerticalDatumCode", "GetDatumName"):
+            try:
+                out[getter] = str(getattr(gcs, getter)())
+            except Exception:
+                pass
+        out.update(extra)
+        return out
+
     def set_coordinate_system(self, cs_cfg: Dict[str, Any]) -> Dict[str, Any]:
+        """Order: EPSG codes in ``epsg_try_first`` (5850 = SWEREF 99 18 00 + RH 2000,
+        compound), then the Bentley key names, then epsg_horizontal (3011)."""
         tried = []
+        for code in cs_cfg.get("epsg_try_first", []):
+            gcs = self._gcs_from_epsg(code, tried)
+            if gcs is not None and (not hasattr(gcs, "IsValid") or gcs.IsValid()):
+                return self._write_gcs(gcs, cs_cfg, tried, epsg_init=code)
         for key in cs_cfg.get("bentley_gcs_keynames", []):
             try:
                 gcs = DgnGCS.CreateGCS(key, self.model_ref)
@@ -223,24 +300,10 @@ class MicroStationBackend(DgnBackend):
             if gcs is None or (hasattr(gcs, "IsValid") and not gcs.IsValid()):
                 tried.append((key, "invalid"))
                 continue
-            vkey = cs_cfg.get("bentley_vertical_datum_key")
-            if vkey:
-                tried.append(("vertical:" + vkey, gcs.SetVerticalDatumByKey(vkey)))
-            st = gcs.ToModel(self.model_ref, True, True, False, False)
-            return {"status": "ok" if _ok(st) else "ToModel status %s" % st, "keyname": key,
-                    "epsg": gcs.GetEPSGCode(False), "name": str(gcs.GetName()), "tried": tried}
-        # fallback: EPSG code (reference page states 20000-32767 for projected systems, 3011 may be refused)
-        try:
-            base = BaseGCS.CreateGCS()
-            res = base.InitFromEPSGCode(int(cs_cfg["epsg_horizontal"]))
-            if _ok(res[0] if isinstance(res, tuple) else res):
-                gcs = DgnGCS.CreateGCS(base, self.model_ref)
-                st = gcs.ToModel(self.model_ref, True, True, False, False)
-                return {"status": "ok" if _ok(st) else "ToModel status %s" % st, "epsg_init": res,
-                        "epsg": gcs.GetEPSGCode(False), "name": str(gcs.GetName()), "tried": tried}
-            tried.append(("EPSG:%s" % cs_cfg["epsg_horizontal"], str(res)))
-        except Exception as e:
-            tried.append(("EPSG", "exception %s" % e))
+            return self._write_gcs(gcs, cs_cfg, tried, keyname=key)
+        gcs = self._gcs_from_epsg(cs_cfg["epsg_horizontal"], tried)
+        if gcs is not None:
+            return self._write_gcs(gcs, cs_cfg, tried, epsg_init=cs_cfg["epsg_horizontal"])
         return {"status": "NOT SET - assign SWEREF 99 18 00 manually (Geographic Coordinate System dialog)",
                 "tried": tried}
 
@@ -268,7 +331,35 @@ class MicroStationBackend(DgnBackend):
         return out
 
     # -------------------------------------------------------------- item types
-    def ensure_item_types(self, library: str, spec: Dict[str, Sequence[Tuple[str, str]]]) -> Dict[str, Any]:
+    def _unit(self, ifc_type: str, units_cfg: Dict[str, Any]):
+        """DgnECUnit for an IFC measure type (candidates from config, first one
+        that DgnECUnit.FromID resolves).  Cached per IFC type."""
+        cache = self.__dict__.setdefault("_unit_cache", {})
+        if ifc_type in cache:
+            return cache[ifc_type]
+        unit = None
+        tried = []
+        for uid in units_cfg.get(ifc_type, []):
+            try:
+                u = DgnECUnit.FromID(uid)
+                ok = u is not None and (not hasattr(u, "IsSpecified") or u.IsSpecified())
+                tried.append((uid, bool(ok)))
+                if ok:
+                    unit = (uid, u)
+                    break
+            except Exception as e:
+                tried.append((uid, "exception %s" % e))
+        cache[ifc_type] = unit
+        self.__dict__.setdefault("unit_report", {})[ifc_type] = {"used": unit[0] if unit else None, "tried": tried}
+        return unit
+
+    def ensure_item_types(self, library: str, spec: Dict[str, Sequence[Tuple[str, str]]],
+                          units: Optional[Dict[Tuple[str, str], str]] = None,
+                          units_cfg: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """``units`` maps (item type, property) to the IFC measure type and
+        ``units_cfg`` the IFC measure type to DgnECUnit ids; Double properties
+        then get CustomProperty.SetUnits(DgnECUnit) so the value carries its unit
+        into the export."""
         ptype = property_types()
         self._ptype = ptype
         lib = ItemTypeLibrary.FindByName(library, self.dgn_file)
@@ -276,6 +367,7 @@ class MicroStationBackend(DgnBackend):
         if created:
             lib = create_item_type_library(library, self.dgn_file)
         added = []
+        units_set: List[Tuple[str, str, Any]] = []
         for it_name, props in spec.items():
             it = lib.GetItemTypeByName(it_name)
             if it is None:
@@ -287,6 +379,15 @@ class MicroStationBackend(DgnBackend):
                     prop = it.AddProperty(pname, False)
                     if not prop.SetType(ptype[ptype_name]):
                         raise BackendError("SetType(%s) failed for %s.%s" % (ptype_name, it_name, pname))
+                ifc_type = (units or {}).get((it_name, pname))
+                if ifc_type and units_cfg and DgnECUnit is not None and ptype_name == "Double":
+                    unit = self._unit(ifc_type, units_cfg)
+                    if unit is not None:
+                        try:
+                            ok = prop.SupportsUnits() and prop.SetUnits(unit[1])
+                        except Exception as e:
+                            ok = "exception %s" % e
+                        units_set.append(("%s.%s" % (it_name, pname), unit[0], ok))
         st = lib.Write()
         lib = ItemTypeLibrary.FindByName(library, self.dgn_file)
         if lib is None:
@@ -299,30 +400,212 @@ class MicroStationBackend(DgnBackend):
             schema = str(lib.GetInternalName())
         except Exception:  # pragma: no cover
             pass
-        return {"library": library, "created": created, "item_types_added": added, "internal_name": schema}
+        return {"library": library, "created": created, "item_types_added": added, "internal_name": schema,
+                "units_set": units_set, "unit_ids": getattr(self, "unit_report", {})}
+
+    # ------------------------------------------- Bentley's IFC Classification
+    @staticmethod
+    def _find_library(names: Sequence[str], dgn_file):
+        for name in names:
+            for finder in (ItemTypeLibrary.FindByName, ItemTypeLibrary.FindBySchemaName):
+                try:
+                    lib = finder(name, dgn_file)
+                except Exception:
+                    lib = None
+                if lib is not None:
+                    return name, lib
+        return None, None
+
+    @staticmethod
+    def _item_types_of(lib) -> List[Any]:
+        out = []
+        try:
+            for i in range(int(lib.GetItemTypeCount())):
+                out.append(lib.GetItemTypeAt(i))
+        except Exception:
+            pass
+        return [it for it in out if it is not None]
+
+    @staticmethod
+    def _properties_of(it) -> List[Any]:
+        """All properties of an item type (GetPropertyCount + GetPropertyById; the
+        ids are not documented to be 0..n-1, so a wider range is scanned)."""
+        try:
+            n = int(it.GetPropertyCount())
+        except Exception:
+            return []
+        props, seen = [], set()
+        for pid in range(0, 4 * n + 16):
+            if len(props) >= n:
+                break
+            try:
+                p = it.GetPropertyById(pid)
+            except Exception:
+                p = None
+            if p is not None and str(p.GetName()) not in seen:
+                seen.add(str(p.GetName()))
+                props.append(p)
+        return props
+
+    def _picklist_values(self, prop, dgn_file, limit: int = 2000) -> Optional[Dict[str, Any]]:
+        """Name and values of the pick list behind a property (None if it has none)."""
+        if PickListLibrary is None:
+            return None
+        v = ECValue()
+        try:
+            if not prop.GetPickListName(v) or v.IsNull():
+                return None
+            name = str(v.GetString())
+        except Exception:
+            return None
+        if not name:
+            return None
+        try:
+            lib = PickListLibrary.CreatePickListLibrary()
+            PickListLibrary.GetPickListLibFromDgn(dgn_file, lib)
+            pl = lib.GetPickListByName(WString(name))
+        except Exception as e:
+            return {"name": name, "error": str(e), "values": []}
+        if pl is None:
+            return {"name": name, "values": [], "error": "pick list not found in file"}
+        values, n = [], int(pl.GetValueCount())
+        for vid in range(0, 4 * n + 16):
+            if len(values) >= min(n, limit):
+                break
+            try:
+                if pl.CanFindValueById(vid):
+                    values.append(str(pl.GetPickListValueByID(vid).GetValue()))
+            except Exception:
+                pass
+        return {"name": name, "count": n, "values": values}
+
+    def describe_item_type(self, it, dgn_file=None) -> List[Dict[str, Any]]:
+        dgn_file = dgn_file or self.dgn_file
+        out = []
+        for p in self._properties_of(it):
+            entry = {"name": str(p.GetName())}
+            try:
+                entry["type"] = str(p.GetType())
+            except Exception:
+                pass
+            pl = self._picklist_values(p, dgn_file)
+            if pl:
+                entry["picklist"] = pl
+            out.append(entry)
+        return out
+
+    def open_dgn_readonly(self, path: str):
+        """Bentley pdf/05: DgnFile(document, DgnFileOpenMode.eReadOnly) + LoadDgnFile();
+        the dictionary model holds the Item Type and pick list definitions."""
+        doc = DgnDocument.CreateForLocalFile(path)
+        if doc is None:
+            raise BackendError("DgnDocument.CreateForLocalFile returned None for %s" % path)
+        f = DgnFile(doc, DgnFileOpenMode.eReadOnly)
+        st = f.LoadDgnFile()
+        if not _ok(st[0] if isinstance(st, tuple) else st):
+            raise BackendError("LoadDgnFile failed for %s (status %s)" % (path, st))
+        f.FillDictionaryModel()
+        return f
+
+    def locate_dgnlib(self, cfg: Dict[str, Any]) -> Optional[str]:
+        import os
+        values = [get_config_variable(v) for v in cfg.get("dgnlib_search_config_variables", [])]
+        for cand in dgnlib_candidates(cfg["dgnlib_file"], values):
+            if os.path.isfile(cand):
+                return cand
+        return None
+
+    def import_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Dict[str, Any]:
+        """Copy Bentley's 'IFC Classification' Item Type library and its pick
+        lists from IFC_Classes_Types.dgnlib into the active DGN (the same as
+        Item Types dialog > Import, MicroStation help "To Import and Attach
+        IFC-related Item Types to DGN Elements before Exporting to IFC").
+        ItemTypeLibrary.CloneForFile(destFile) + Write(); pick lists with
+        PickListLibrary.GetPickListLibFromDgn/SavePickListLibToDgn."""
+        rep: Dict[str, Any] = {}
+        missing = [n for n in ("DgnDocument", "DgnFile", "DgnFileOpenMode") if globals().get(n) is None]
+        if missing:
+            rep["error"] = "API classes missing: %s" % missing
+            return rep
+        path = self.locate_dgnlib(cfg)
+        rep["dgnlib"] = path
+        if not path:
+            rep["error"] = "%s not found via %s" % (cfg["dgnlib_file"], cfg.get("dgnlib_search_config_variables"))
+            return rep
+        src = self.open_dgn_readonly(path)
+        name, lib = self._find_library(cfg.get("library_name_candidates", []), src)
+        if lib is None:
+            rep["error"] = "no library %s in %s" % (cfg.get("library_name_candidates"), path)
+            return rep
+        rep["library_in_dgnlib"] = name
+        if PickListLibrary is not None:
+            try:
+                pls = PickListLibrary.CreatePickListLibrary()
+                PickListLibrary.GetPickListLibFromDgn(src, pls)
+                rep["picklists_in_dgnlib"] = int(pls.GetPickListCount())
+                rep["picklists_saved"] = bool(PickListLibrary.SavePickListLibToDgn(self.dgn_file, pls, False))
+            except Exception as e:
+                rep["picklists_error"] = str(e)
+        clone = lib.CloneForFile(self.dgn_file, False)
+        if clone is None:
+            rep["error"] = "CloneForFile returned None"
+            return rep
+        rep["written"] = bool(clone.Write())
+        return rep
 
     def find_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Locate Bentley's delivered 'IFC Classification' item type in the active
-        DGN (imported from IFC_Classes_Types.dgnlib, see MicroStation help
-        "(Technology Preview) To Import and Attach IFC-related Item Types")."""
-        for lib_name in cfg.get("library_name_candidates", []):
-            lib = ItemTypeLibrary.FindByName(lib_name, self.dgn_file)
-            if lib is None:
-                continue
-            for it_name in cfg.get("item_type_candidates", []):
-                it = lib.GetItemTypeByName(it_name)
-                if it is None:
-                    continue
-                props = {}
-                for role in ("version", "class", "type"):
-                    for cand in cfg.get("%s_property_candidates" % role, []):
-                        if it.GetPropertyByName(cand) is not None:
-                            props[role] = cand
-                            break
-                self._libs[lib_name] = lib
-                self._item_types[(lib_name, it_name)] = it
-                return {"library": lib_name, "item_type": it_name, "properties": props}
-        return None
+        DGN and work out which property is version/class/type (candidate names
+        from config, otherwise by name), with the pick list values of each, so
+        values can be written exactly as the pick lists spell them."""
+        lib_name, lib = self._find_library(cfg.get("library_name_candidates", []), self.dgn_file)
+        if lib is None:
+            return None
+        it = None
+        for it_name in cfg.get("item_type_candidates", []):
+            it = lib.GetItemTypeByName(it_name)
+            if it is not None:
+                break
+        if it is None:
+            its = self._item_types_of(lib)
+            if len(its) != 1:
+                return {"library": lib_name, "item_type": None, "properties": {},
+                        "item_types_in_library": [str(i.GetName()) for i in its]}
+            it = its[0]
+        it_name = str(it.GetName())
+        desc = self.describe_item_type(it)
+        names = [d["name"] for d in desc]
+        props: Dict[str, str] = {}
+        for role in ("version", "class", "type"):
+            lower = {n.lower(): n for n in names}
+            for cand in cfg.get("%s_property_candidates" % role, []):
+                if cand.lower() in lower:
+                    props[role] = lower[cand.lower()]
+                    break
+            if role not in props:
+                hits = [n for n in names if role in n.lower() and n not in props.values()]
+                if hits:
+                    props[role] = hits[0]
+        self._libs[lib_name] = lib
+        self._item_types[(lib_name, it_name)] = it
+        picklists = {role: next((d["picklist"]["values"] for d in desc if d["name"] == pname and d.get("picklist")), None)
+                     for role, pname in props.items()}
+        return {"library": lib_name, "item_type": it_name, "properties": props, "all_properties": desc,
+                "picklists": {k: v for k, v in picklists.items() if v}}
+
+    def ensure_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Tuple[Optional[Dict[str, Any]], Dict[str, Any]]:
+        found = self.find_bentley_ifc_classification(cfg)
+        rep: Dict[str, Any] = {"present_before": bool(found and found.get("item_type"))}
+        if not rep["present_before"] and cfg.get("auto_import", True):
+            try:
+                rep["import"] = self.import_bentley_ifc_classification(cfg)
+            except Exception as e:
+                rep["import"] = {"error": "%s: %s" % (type(e).__name__, e)}
+            found = self.find_bentley_ifc_classification(cfg)
+        if found and not found.get("item_type"):
+            rep["error"] = "library found but item type not identified: %s" % found.get("item_types_in_library")
+            found = None
+        return found, rep
 
     # ------------------------------------------------------------------- purge
     def _generated_handles(self, library: str, marker_item_type: str):
@@ -472,6 +755,44 @@ class MicroStationBackend(DgnBackend):
     def element_id(self, element) -> int:
         return int(element.GetElementId())
 
+    # ------------------------------------------------------------------ cells
+    def add_cell(self, name: str, children: List[Any], level_id: int, add: bool = True):
+        """Named (orphan) cell with the given element handles as children
+        (NormalCellHeaderHandler.CreateOrphanCellElement + AddChildElement +
+        AddChildComplete).  Children are created with ``hold_elements = True``;
+        a cell that is itself a child is created with ``add=False``."""
+        eeh = EditElementHandle()
+        st = NormalCellHeaderHandler.CreateOrphanCellElement(eeh, name, True, self.model_ref)
+        if not _ok(st):
+            raise BackendError("CreateOrphanCellElement failed for %s (status %s)" % (name, st))
+        for ch in children:
+            st = NormalCellHeaderHandler.AddChildElement(eeh, ch)
+            if not _ok(st):
+                raise BackendError("AddChildElement failed in %s (status %s)" % (name, st))
+        st = NormalCellHeaderHandler.AddChildComplete(eeh)
+        if not _ok(st):
+            raise BackendError("AddChildComplete failed for %s (status %s)" % (name, st))
+        setter = ElementPropertiesSetter()
+        setter.SetLevel(int(level_id))
+        setter.Apply(eeh)
+        if add:
+            st = eeh.AddToModel()
+            if not _ok(st):
+                raise BackendError("AddToModel failed for cell %s (status %s)" % (name, st))
+        return eeh
+
+    def for_each_cell_child(self, cell, fn) -> int:
+        """Calls ``fn(index, child_handle)`` for the direct children of a cell in
+        the model (used to attach Item Types to the children).  The iterator
+        object is reused by ToNext(), so the handle is only valid inside fn."""
+        n = 0
+        it = ChildEditElemIter(cell, ExposeChildrenReason.eEdit)
+        while it is not None and it.IsValid():
+            fn(n, it)
+            n += 1
+            it = it.ToNext()
+        return n
+
     # ------------------------------------------------------------- item values
     @staticmethod
     def _ecvalue(value) -> "ECValue":
@@ -509,6 +830,15 @@ class MicroStationBackend(DgnBackend):
             for prop, value in values.items():
                 inst.SetValue(prop, self._ecvalue(value))
             inst.WriteChanges()
+
+    def get_item_value(self, element, library: str, item_type: str, prop: str):
+        """Value of one Item Type property on an element (None if not attached)."""
+        inst = CustomItemHost(element, False).GetCustomItem(library, item_type)
+        if inst is None:
+            return None
+        v = ECValue()
+        inst.GetValue(v, prop)
+        return None if v.IsNull() else str(v.GetString())
 
     # ------------------------------------------------------------ named groups
     def create_named_group(self, name: str, description: str, element_ids: List[int]) -> None:

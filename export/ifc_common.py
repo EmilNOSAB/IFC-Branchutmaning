@@ -1,4 +1,4 @@
-"""Helpers shared by the IFC post step, the export inspection and the validator."""
+"""Helpers shared by the export inspection and the validator (read only)."""
 
 from __future__ import annotations
 

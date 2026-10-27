@@ -328,7 +328,8 @@ class RailwayModelBuilder:
                       station_from=tr.sta_start, station_to=tr.sta_end, spatial_parent="SITE-1",
                       spatial_relation="referenced",
                       attributes={"LandXmlName": a["landxml_name"], "Role": a["role"],
-                                  "LandXmlGuid": tr.alignment.guid or ""})
+                                  "LandXmlGuid": tr.alignment.guid or ""},
+                      psets={"Pset_Stationing": {"Station": round(tr.sta_start, 4), "HasIncreasingStation": True}})
 
     # ----------------------------------------------------------------- sleepers
     def _sleeper_grid(self, track: TrackGeometry, s0: float, s1: float) -> List[float]:

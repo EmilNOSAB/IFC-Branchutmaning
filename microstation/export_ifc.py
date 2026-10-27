@@ -18,9 +18,10 @@ script
    macros), and
 4. prints and writes the exact dialog settings to output/export_instructions.txt.
 
-After exporting, run ``python export/complete_ifc_structure.py`` (explicit,
-separate post step) and ``python validation/validate_ifc.py`` with a normal
-Python that has IfcOpenShell.
+The exported file is the deliverable and is not modified afterwards.  Check
+it with ``python validation/validate_ifc.py`` (and
+``python export/inspect_bentley_export.py``) in a normal Python that has
+IfcOpenShell.
 """
 
 from __future__ import annotations
@@ -79,9 +80,9 @@ def load_jsonc(path: str):
 
 
 def instructions(cfg, mapping_copy: str) -> str:
-    ifc_out = cfg.file("ifc_bentley_export")
+    ifc_out = cfg.file("ifc_output")
     return "\n".join([
-        "IFC-export i MicroStation 2025 (Technology Preview iTwin IFC Exporter)",
+        "IFC-export i MicroStation 2025/2026 (iTwin IFC Exporter)",
         "",
         "1. Öppna exportdialogen: File > Export > Exchange File Types > IFC (*.ifc)",
         "   eller key-in: %s, därefter %s" % tuple(KEYINS),
@@ -92,10 +93,10 @@ def instructions(cfg, mapping_copy: str) -> str:
         "   (filen genereras/valideras av export/build_schema_mapping.py)",
         "5. Klicka Export.",
         "",
-        "Efter export (vanlig Python med IfcOpenShell):",
-        "  python export/inspect_bentley_export.py   -> vilka klasser/relationer exportören skapade",
-        "  python export/complete_ifc_structure.py   -> separat, uttryckligt efterbearbetningssteg",
+        "Den exporterade filen är leveransen och ändras inte i efterhand.",
+        "Kontroll (vanlig Python med IfcOpenShell, läser bara):",
         "  python validation/validate_ifc.py         -> IDS-validering, HTML/JSON-rapport",
+        "  python export/inspect_bentley_export.py   -> vilka klasser/relationer exportören skapade",
     ])
 
 

@@ -1,8 +1,13 @@
 # Branschutmaningen 2026 – DGN-modellering och IFC 4.3-export i Bentley MicroStation
 
-Lösningen bygger en tredimensionell, redigerbar **DGN-modell i MicroStation** av banöverbyggnaden (räler, slipers, ballast och spårväxlar) utifrån LandXML-linjeföringarna. Varje element får Item Types med IFC-klass, CoClass, Psets och Qtos. Modellen exporteras till **IFC 4.3 ADD2 med MicroStations egen IFC-exportör**, kompletteras vid behov i ett separat och uttryckligt efterbearbetningssteg och valideras mot original-IDS:en.
+Lösningen bygger en tredimensionell, redigerbar **DGN-modell i MicroStation** av banöverbyggnaden (räler, slipers, ballast och spårväxlar) utifrån LandXML-linjeföringarna. Varje element får Item Types med IFC-klass, CoClass, Psets och Qtos. Modellen exporteras till **IFC 4.3 ADD2 med MicroStations egen IFC-exportör**. Den exporterade filen är leveransen och ändras inte i efterhand. Den valideras som den är mot original-IDS:en.
 
-> **Status – läs detta först.** Utvecklingen skedde i en Linux-container utan MicroStation (`docs/evidence/environment_report_linux_container.json`). Kedjan har därefter körts av användaren i **MicroStation 2026**: DGN med 3 477 element och 0 fel, Bentleys IFC 4.3-export, efterbearbetning och IDS-validering. Med rättningarna efter den körningen ger samma export **17/22** IDS-specifikationer. De 5 underkända beror enbart på motsägelser i IDS:en, se [`docs/evidence/microstation2026_run1/`](docs/evidence/microstation2026_run1/). Allt som går att köra utan MicroStation är testat (55 automatiska tester). Bentley-API-anropen finns i `microstation/msapi.py` och är kontrollerade mot Bentleys API-referens. Det som måste provas inuti MicroStation står i [`docs/MicroStation_verifiering.md`](docs/MicroStation_verifiering.md).
+> **Status – läs detta först.** Utvecklingen skedde i en Linux-container utan MicroStation. Kedjan har körts en gång av användaren i **MicroStation 2026**:
+> * **DGN:** 3 477 element och 0 fel.
+> * **Export:** Bentleys IFC 4.3-export gav **1/22** IDS-krav i den oförändrade filen. Allt blev IfcBuildingElementProxy i IfcSite, eftersom Bentleys "IFC Classification" saknades i DGN:en.
+> * **Nu:** byggskriptet importerar "IFC Classification" automatiskt, sätter enheter på måttegenskaper och provar SWEREF 99 18 00 + RH 2000.
+> * **Okänt:** om exportören kan skapa spårdelar, containment, grupper, linjeföringar och CoClass-referenser ur en DGN. Bentley dokumenterar det inte. Det avgörs med exportörsprovet (`microstation/probe_exporter.py`, se [körinstruktionen](docs/Korinstruktion_MicroStation.md) steg 2).
+> * **Gräns:** högst 17/22 kan godkännas på grund av motsägelser i IDS:en. Underlag: [`docs/evidence/microstation2026_run1/`](docs/evidence/microstation2026_run1/), verifieringslista: [`docs/MicroStation_verifiering.md`](docs/MicroStation_verifiering.md).
 
 ## Arbetsflöde
 
@@ -17,19 +22,19 @@ config/*.yaml ──┼─> geometry/ + model/  (ren Python: spårgeometri, desi
                 │                                                                          ▼
                 │   microstation/export_ifc.py ─> MicroStations IFC-exportör (IFC 4.3) + export/SchemaMapping.json
                 │                                                                          │
-                │                                    output/Branschutmaningen_2026_bentley_export.ifc
-                │                                                                          │
-                │   export/inspect_bentley_export.py  (vilka klasser och relationer exportören skapade)
-                └─> export/complete_ifc_structure.py (SEPARAT efterbearbetning, bara DGN-data + LandXML)
-                                                                                           ▼
-                    validation/validate_ifc.py (IfcTester, original-IDS) -> output/validation_report.html/.json
+                │                                    output/Branschutmaningen_2026.ifc  (leveransen, oförändrad)
+                │                                                                          │  läses, ändras inte
+                └─> validation/validate_ifc.py (IfcTester, original-IDS) -> output/validation_report.html/.json
+                    export/inspect_bentley_export.py (vilka klasser och relationer exportören skapade)
+
+  Exportörsprov: microstation/probe_exporter.py (i MicroStation) -> export -> export/inspect_probe_export.py
 ```
 
 ## Teknikval
 
 * **Alternativ A, MicroStation Python API** (MSPyBentley, MSPyBentleyGeom, MSPyECObjects, MSPyDgnPlatform, MSPyMstnPlatform). Allt som behövs finns i Python-API:t: 3D-solider (`ISolidPrimitive.CreateDgnBox`, slutna `PolyfaceHeader`-nät via `DraftingElementSchema.ToElement`), nivåer (`FileLevelCache`), Item Types (`ItemTypeLibrary`, `CustomItemHost`), Named Groups, GCS (`DgnGCS`). Därför behövs ingen C#-AddIn (alternativ B). COM/VBA används inte.
 * IFC 4.3-exporten görs med **MicroStation 2025:s iTwin IFC-exportör** (Technology Preview: File > Export > IFC, key-in `mdl load Bentley.Interchange.iTwinIFCExporter` + `IFC ITWINEXPORT`). Exportören har inget dokumenterat programmerbart API. `export_ifc.py` öppnar dialogen med de dokumenterade key-ins och skriver de exakta inställningarna. Inga GUI-makron med skärmkoordinater används.
-* Ingen fristående IFC-generator ersätter MicroStation. Efterbearbetningen skapar ingen fysisk geometri.
+* Ingen fristående IFC-generator och ingen efterbearbetning. Allt i IFC-filen kommer från MicroStations exportör.
 
 ## Projektstruktur
 
@@ -41,10 +46,10 @@ geometry/       landxml_reader, alignment_math (linje/cirkel/klotoid), vertical_
 model/          railway_model (spårdelar, räler, slipers, ballast), turnout (växelgenerator), geom (solider, mängder), components
 microstation/   build_railway_dgn.py (huvudskript), msapi.py (alla Bentley-anrop), backend.py (+ inspelande backend för torrkörning),
                 create_itemtypes / assign_metadata / create_levels / create_rails / create_sleepers / create_ballast /
-                create_turnout / create_spatial / dgn_geometry, prepare_dgn, inspect_environment, export_ifc
-export/         SchemaMapping.json, build_schema_mapping.py, inspect_bentley_export.py, complete_ifc_structure.py, README.md
+                create_turnout / create_spatial / dgn_geometry, prepare_dgn, inspect_environment, export_ifc, probe_exporter
+export/         SchemaMapping.json, build_schema_mapping.py, inspect_bentley_export.py, inspect_probe_export.py, README.md
 validation/     validate_ifc.py (IDS, HTML/JSON), validate_dgn.py (DGN mot designmodell), ids_conflicts.py
-tests/          51 pytest-tester (+ tests/fixtures/simulated_export.py = SIMULERAD export, inte Bentley)
+tests/          pytest-tester (+ tests/fixtures/simulated_export.py = SIMULERAD export, inte Bentley)
 tools/          plot_design_model.py (plankontroll), make_docs.py (genererar kravmatris och geometrirapport)
 docs/           Kravmatris, konflikter, körinstruktion, verifieringslista, IFC-relationer, geometriverifiering
 output/         resultat från körningarna (kan checkas in för granskning)
@@ -54,12 +59,12 @@ output/         resultat från körningarna (kan checkas in för granskning)
 
 ```bash
 python -m pip install -r requirements.txt
-python -m pytest -q                                              # 55 tester
+python -m pytest -q
 python microstation/build_railway_dgn.py --dry-run --mode preview  # hela orkestreringen, ingen DGN skrivs
 python validation/validate_dgn.py --dry-run
 python tools/plot_design_model.py --mode full --out docs/img/vaxelforbindelse_plan.png
 python validation/ids_conflicts.py                               # motsägelser i original-IDS
-python tools/make_docs.py --pipeline-check                       # kravmatris + geometriverifiering
+python tools/make_docs.py                                        # kravmatris + geometriverifiering
 ```
 
 ## Körning i MicroStation
@@ -67,15 +72,15 @@ python tools/make_docs.py --pipeline-check                       # kravmatris + 
 Se [`docs/Korinstruktion_MicroStation.md`](docs/Korinstruktion_MicroStation.md). Kort version:
 
 ```
+python load "<repo>\microstation\inspect_environment.py"             (miljö, IFC Classification-picklistor, exportörens filer)
+python microstation\prepare_dgn.py --out output\probe\BU26_probe.dgn  (exportörsprov, en gång: öppna filen)
+python load "<repo>\microstation\probe_exporter.py"                  (exportera -> output\probe\BU26_probe.ifc)
+python export\inspect_probe_export.py                                (JA/nej per DGN-konstruktion)
 python microstation\prepare_dgn.py                                   (seed -> output\Branschutmaningen_2026.dgn, öppna filen)
-python load "<repo>\microstation\inspect_environment.py"             (steg 1: miljö, API, exportörens filer)
 python load "<repo>\microstation\build_railway_dgn.py"               (mode: preview | full i config)
 python load "<repo>\validation\validate_dgn.py"
-python export\build_schema_mapping.py --template output\env\<standardfil>.json
-python load "<repo>\microstation\export_ifc.py"                      (öppnar exportdialogen: IFC 4.3, SchemaMapping)
-python export\inspect_bentley_export.py
-python export\complete_ifc_structure.py
-python validation\validate_ifc.py
+python load "<repo>\microstation\export_ifc.py"                      (exportdialogen: IFC 4.3 -> output\Branschutmaningen_2026.ifc)
+python validation\validate_ifc.py                                    (läser exportfilen, ändrar den inte)
 ```
 
 ## Modellen
@@ -103,7 +108,7 @@ python validation\validate_ifc.py
 * Kravmatris IDS → DGN-objekt → Item Type → IFC-mappning → förväntat resultat: [`docs/Kravmatris.md`](docs/Kravmatris.md).
 * Motsägelser i underlagen: [`docs/IDS_och_underlag_konflikter.md`](docs/IDS_och_underlag_konflikter.md). Original-IDS:en kräver att **alla** `IfcRail.RAIL` har Description "innerräl" (#7) **och** "ytterräl" (#16), ligger i PLAINTRACK (#7/#16) **och** i TURNOUTTRACK (#10). Alla slipers ska ligga i PLAINTRACK (#9) **och** TURNOUTTRACK (#17). Högst 17/22 specifikationer kan därför godkännas.
 
-**Testresultat på simulerad export (inte MicroStation):** Exportkedjan har provats på en IFC från `tests/fixtures/simulated_export.py`, som efterliknar en generisk export med Item Types som otypade Psets, alla element i IfcSite och i värsta fall alla som proxys med lokalt origo. Den råa filen klarar 1/22 IDS-specifikationer. Efter `complete_ifc_structure.py` klaras **17/22**. De fem underkända (#7, #9, #10, #16, #17) underkänns enbart på grund av IDS-motsägelserna. Inga proxys finns kvar, `ifcopenshell.validate` ger 0 schemafel och IfcAlignment-geometrin stämmer med LandXML på millimetern. Den verkliga statusen för en MicroStation-export ges av `validation/validate_ifc.py` efter export.
+**Verklig export (MicroStation 2026, körning 1):** 1/22. Varför, och vad som har ändrats, står i [`docs/MicroStation_verifiering.md`](docs/MicroStation_verifiering.md). Den simulerade exporten i `tests/fixtures/simulated_export.py` används bara för att testa validatorn och analysskripten.
 
 ## Konfiguration
 
@@ -111,10 +116,10 @@ python validation\validate_ifc.py
 
 ## Begränsningar
 
-* Inget av MicroStation-stegen har körts här (se status ovan och verifieringslistan V-01–V-17).
-* Exportörens hantering av spatiala klasser, Item Types och relationer är inte känd i förväg. `inspect_bentley_export.py` mäter den och efterbearbetningen kompletterar.
+* MicroStation-stegen körs hos användaren, inte här (se status ovan och verifieringslistan V-01–V-22).
+* Det är inte dokumenterat vad exportören gör med spatiala klasser, celler, grupper och enheter. Exportörsprovet mäter det. Det exportören inte kan skapa saknas i leveransen; det kompletteras inte i efterhand.
 * Växelns komponenter är konstruktivt förenklade (tungor som avsmalnande profiler, korsning som kil). Förbindelsens fiktiva geometri (anslutning i vinkel mot S, höjdsprång 0,228 m) hanteras som beskrivet i konfliktdokumentet.
-* Civila alignment-objekt (OpenRail) skapas inte. I DGN:en finns linjeföringarna som 3D-linjesträngar med metadata, och i IFC som IfcAlignment med full semantik från LandXML.
+* Civila alignment-objekt (OpenRail) skapas inte. I DGN:en finns linjeföringarna som 3D-linjesträngar med metadata och Pset_Stationing. En IfcAlignment med horisontal-, vertikal- och cant-layout kräver en civil-exportör (OpenRail Designer).
 
 ## Källor (Bentley)
 

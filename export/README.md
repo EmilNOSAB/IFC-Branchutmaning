@@ -6,7 +6,7 @@
 | `build_schema_mapping.py` | Genererar `SchemaMapping.json`. Med `--template` utgår den från standardfilen som levereras med den installerade exportören. |
 | `schema_mapping_build_report.json` | Vad byggaren gjorde (mall/ingen mall, tillagda klassposter). |
 | `inspect_bentley_export.py` | Analyserar den råa exporten: klass per DGN-kategori, Pset-namn och -datatyper, relationer, CRS. |
-| `complete_ifc_structure.py` | **Separat, uttryckligt efterbearbetningssteg** efter MicroStation-exporten (se nedan). |
+| `inspect_probe_export.py` | Analyserar exporten av provfilen från `microstation/probe_exporter.py`: vilka DGN-konstruktioner exportören översätter till spatial struktur, relationer, grupper, måttyper och klassificering. |
 | `ifc_common.py` | Gemensamma hjälpfunktioner (hittar BU26-objekt via Item Type-värden). |
 
 ## SchemaMapping.json
@@ -37,11 +37,6 @@ Tolkningen av `"Class": [EC-schema, EC-klass, IFC-klass]` med EC-schemat `IFCDyn
 
 Klassningen per element görs i DGN:en med Bentleys "IFC Classification" Item Type (Version/Class/Type), som byggskriptet fyller i. DGN-nivån styr aldrig IFC-klassen.
 
-## Efterbearbetningssteget
+## Ingen efterbearbetning
 
-`complete_ifc_structure.py` körs först **efter** att DGN:en har byggts i MicroStation och exporterats med Bentleys exportör. Steget:
-* läser bara information som kommit ut ur DGN:en (exporterade BU2026_IFC Item Type-värden) samt LandXML för alignment-semantiken,
-* skapar ingen fysisk geometri och ändrar aldrig exportfilen (skriver en ny fil),
-* loggar varje ändring i `output/postprocess_report.json`.
-
-Vad steget gör och varför står i `docs/IFC_relationer.md`.
+IFC-filen från MicroStations exportör är leveransen. Skripten här läser den bara, för validering och analys. Om något saknas i exporten ändras DGN-strukturen eller SchemaMapping, och därefter görs en ny export.

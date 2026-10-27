@@ -16,8 +16,13 @@ item_type_library: BU2026_IFC
 # (verify with microstation/inspect_environment.py).
 bentley_ifc_classification:
   enabled: true
+  # Import the library from the dgnlib automatically when it is not in the DGN
+  # (ItemTypeLibrary.CloneForFile, same result as Item Types dialog > Import).
+  auto_import: true
   dgnlib_file: IFC_Classes_Types.dgnlib
-  dgnlib_search_config_variables: [MS_DGNLIBLIST_ITEMTYPES, MS_DGNLIBLIST, _USTN_INSTALLED_DGNLIBS]
+  # Folders are taken from these configuration variables (each also with an
+  # ItemTypes subfolder); MSDIR gives the delivered <MSDIR>Default\Dgnlib\ItemTypes.
+  dgnlib_search_config_variables: [MS_DGNLIBLIST_ITEMTYPES, MS_DGNLIBLIST, _USTN_INSTALLED_DGNLIBS, MSDIR]
   library_name_candidates: [IFC Classification, IFC_Classes_Types, IFCClassification]
   item_type_candidates: [IFC Classification, IFCClassification, IfcClassification]
   version_property_candidates: [Version, IFC Version, IfcVersion, Schema]
@@ -25,9 +30,25 @@ bentley_ifc_classification:
   type_property_candidates: [Type, IFC Type, IfcType, PredefinedType, Predefined Type]
   version_value: IFC4X3_ADD2
   # Only elements of these IFC classes get the Bentley Item Type.  Carriers of
-  # IfcProject/IfcSite/IfcBuiltSystem do not: the exporter creates project and
-  # site itself and IfcBuiltSystem (an IfcGroup) has no geometry.
-  apply_to_entities: [IfcRail, IfcTrackElement, IfcCourse, IfcElementAssembly, IfcRailwayPart, IfcRailway, IfcSpatialZone, IfcAlignment]
+  # IfcProject/IfcSite do not: the exporter creates project and site itself
+  # (ProjectConfigurations).  Whether the exporter turns a classified carrier
+  # into IfcBuiltSystem (an IfcGroup) is tested by microstation/probe_exporter.py.
+  apply_to_entities: [IfcRail, IfcTrackElement, IfcCourse, IfcElementAssembly, IfcRailwayPart, IfcRailway, IfcSpatialZone, IfcAlignment, IfcBuiltSystem]
+
+# Units for Double Item Type properties whose IFC type is a measure, so that the
+# exporter receives the quantity kind (CustomProperty.SetUnits(DgnECUnit)).
+# DgnECUnit.FromID ids are tried in order; the one that resolved is written to
+# output/model_report.json (item_types.unit_ids).
+item_type_units:
+  IfcLengthMeasure: [METRE, M]
+  IfcPositiveLengthMeasure: [METRE, M]
+  IfcQuantityLength: [METRE, M]
+  IfcAreaMeasure: [METRE_SQUARED, SQUARE_METRE, SQ_M]
+  IfcVolumeMeasure: [METRE_CUBED, CUBIC_METRE, CUB_M]
+  IfcQuantityVolume: [METRE_CUBED, CUBIC_METRE, CUB_M]
+  IfcQuantityWeight: [KILOGRAM, KG]
+  IfcElectricVoltageMeasure: [VOLT, V]
+  IfcPowerMeasure: [WATT, W]
 
 classification_systems:
   CoClass_BV: {name: CoClass_BV, source: CoClass, edition: "2.0", description: CoClass Byggnadsverk}
@@ -160,9 +181,12 @@ categories:
     predefined_type: RAILWAYTRACK
     classifications: [[CoClass_FS, R, Spårsystem]]
 
-# IFC data types for property/quantity sets (used by the post-processing step
-# to type values correctly and by validate_dgn.py to check item type values).
+# IFC data types for property/quantity sets (units above, and validate_dgn.py
+# checks the item type values against them).
 property_sets:
+  Pset_Stationing:
+    Station: IfcLengthMeasure
+    HasIncreasingStation: IfcBoolean
   Pset_RailwayTrackStructurePart:
     HasBallastTrack: IfcBoolean
     HasCWR: IfcBoolean

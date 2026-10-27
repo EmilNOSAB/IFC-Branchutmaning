@@ -6,16 +6,17 @@ Design rules
   (it can be exported to a DGNLIB from the Item Types dialog for reuse).
 * ``BU26_Object``: identity, IFC entity/PredefinedType/attributes, spatial
   parent and stationing of every generated element.  It is also the marker
-  used to find generated elements again (purge, validation, IFC post step).
+  used to find generated elements again (purge, validation, export analysis).
 * ``BU26_Classification``: up to two CoClass references (ballast needs two).
 * Property and quantity sets are Item Types named exactly like the IFC sets
   (``Pset_RailwayTrackStructurePart``, ``Qto_CourseBaseQuantities`` ...) with
   properties named exactly like the IFC properties, so that an export that
   writes Item Types as property sets produces the IFC names directly.
-* Only String, Boolean, Integer and Double property types are used (the
-  basic Item Type types; no units/expressions), which every IFC/iModel
-  connector can read.  The IFC measure types (IfcLengthMeasure ...) are listed
-  in config/object_mapping.yaml and applied by export/complete_ifc_structure.py.
+* Only String, Boolean, Integer and Double property types are used.  Double
+  properties whose IFC type is a measure (config/object_mapping.yaml
+  property_sets/quantity_sets) get a unit (CustomProperty.SetUnits), so the
+  exporter has the information to write IfcLengthMeasure/IfcVolumeMeasure ...
+  instead of IfcReal.
 
 Bentley's delivered ``IFC Classification`` Item Type (IFC_Classes_Types.dgnlib)
 is attached in addition, when it has been imported into the DGN.
@@ -94,6 +95,10 @@ ITEM_TYPES: Dict[str, List[Tuple[str, str]]] = {
         ("HasSpecialEquipment", "Boolean"),
         ("IsContaminatedSleeper", "Boolean"),
     ],
+    "Pset_Stationing": [
+        ("Station", "Double"),
+        ("HasIncreasingStation", "Boolean"),
+    ],
     "Qto_CourseBaseQuantities": [
         ("Length", "Double"),
         ("Width", "Double"),
@@ -130,7 +135,20 @@ def check_spec_against_mapping(mapping: Dict) -> List[str]:
     return problems
 
 
-def create_item_types(backend, library: str) -> Dict:
+def measure_types(mapping: Dict) -> Dict[Tuple[str, str], str]:
+    """(item type, property) -> IFC measure type, for the Double properties that
+    get a unit (keys of mapping['item_type_units'])."""
+    with_units = set(mapping.get("item_type_units", {}))
+    out = {}
+    for section in ("property_sets", "quantity_sets"):
+        for set_name, props in mapping.get(section, {}).items():
+            for prop, ifc_type in props.items():
+                if ifc_type in with_units:
+                    out[(set_name, prop)] = ifc_type
+    return out
+
+
+def create_item_types(backend, library: str, mapping: Dict) -> Dict:
     """Create (or complete) the library in the active DGN.  Existing item types
     and properties are kept, so the call is idempotent."""
-    return backend.ensure_item_types(library, ITEM_TYPES)
+    return backend.ensure_item_types(library, ITEM_TYPES, measure_types(mapping), mapping.get("item_type_units"))

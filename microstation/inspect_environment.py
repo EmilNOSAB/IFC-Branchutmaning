@@ -9,7 +9,9 @@ Writes output/environment_report.json with
 * Bentley's IFC_Classes_Types.dgnlib / .xlsx and the iTwinIFCExporter files,
   including the delivered default SchemaMapping*.json files (copied to
   output/env/ so export/build_schema_mapping.py can use them as template)
-* whether the 'IFC Classification' Item Type is present in the active DGN
+* whether the 'IFC Classification' Item Type is present in the active DGN, and
+  the item types, properties and pick lists of IFC_Classes_Types.dgnlib
+  (output/ifc_classification_library.json)
 * which Bentley GCS key names for SWEREF 99 18 00 resolve (nothing is written)
 
 Search roots come from configuration/environment variables; no installation
@@ -36,25 +38,29 @@ CFG_VARS = ["_USTN_PRODUCT_RELEASE", "_USTN_PRODUCT_VERSION_GENERATION", "_ENGIN
             "MSDIR", "_USTN_PROGRAMDATA", "_USTN_CONFIGURATION", "MS_PYTHON", "MS_PYTHONSEARCHDIRECTORIES",
             "MS_DESIGNSEED", "MS_SEEDFILES", "MS_DGNLIBLIST", "MS_DGNLIBLIST_ITEMTYPES", "ITEMTYPE_LOOKUP",
             "MS_GEOCOORDINATE_DATA", "_USTN_WORKSPACENAME", "_USTN_WORKSETNAME"]
-PATTERNS = ["IFC_Classes_Types*", "*SchemaMapping*.json", "*iTwinIFCExporter*", "*IfcExport*.json", "*Mapping*.json"]
+PATTERNS = ["IFC_Classes_Types*", "*SchemaMapping*.json", "*iTwinIFCExporter*", "*IfcExport*.json", "*Mapping*.json",
+            "*iModel*Connector*", "*DgnV8*Connector*"]
 
 
 def _is_mapping_template(path: str) -> bool:
-    """A JSON(C) file that looks like an IFC export mapping (GlobalVariables or
-    "Class" entries), found in a folder whose path mentions IFC."""
-    if not path.lower().endswith(".json") or "ifc" not in path.lower():
+    """A JSON(C) file that looks like the exporter's schema mapping
+    (GlobalVariables / ProjectConfigurations / "Class" entries)."""
+    if not path.lower().endswith((".json", ".jsonc")):
         return False
     try:
         if os.path.getsize(path) > 20 * 1024 * 1024:
             return False
         with open(path, encoding="utf-8", errors="ignore") as fh:
             head = fh.read()
-        return "GlobalVariables" in head or '"Class"' in head
+        return "GlobalVariables" in head or "ProjectConfigurations" in head or \
+            ('"Class"' in head and "IFC" in head.upper())
     except OSError:
         return False
 
 
-def _search_json_in_ifc_dirs(roots, max_depth=9, limit=100):
+def _search_mapping_json(roots, max_depth=12, limit=100):
+    """Every .json under the roots is checked by content (the default mapping's
+    folder does not necessarily mention IFC in its path)."""
     hits = []
     for root in roots:
         if not root or not os.path.isdir(root):
@@ -63,9 +69,9 @@ def _search_json_in_ifc_dirs(roots, max_depth=9, limit=100):
         for dirpath, dirnames, filenames in os.walk(root):
             if dirpath.count(os.sep) - base_depth >= max_depth:
                 dirnames[:] = []
-            if "ifc" not in dirpath.lower():
-                continue
             for name in filenames:
+                if not name.lower().endswith((".json", ".jsonc")):
+                    continue
                 full = os.path.join(dirpath, name)
                 if _is_mapping_template(full):
                     hits.append(full)
@@ -95,6 +101,40 @@ def _search(roots, patterns, max_depth=7, limit=200):
                     if len(hits) >= limit:
                         return hits
     return hits
+
+
+def describe_ifc_classification_dgnlib(be, bic_cfg):
+    """Item types, properties and pick lists of Bentley's IFC_Classes_Types.dgnlib
+    (read only; written in full to output/ifc_classification_library.json)."""
+    out = {"dgnlib": None}
+    try:
+        path = be.locate_dgnlib(bic_cfg)
+        out["dgnlib"] = path
+        if not path:
+            return out
+        src = be.open_dgn_readonly(path)
+        from MSPyDgnPlatform import ItemTypeLibrary
+        libs = {}
+        for name in bic_cfg.get("library_name_candidates", []):
+            lib = ItemTypeLibrary.FindByName(name, src)
+            if lib is None:
+                continue
+            libs[name] = {str(it.GetName()): be.describe_item_type(it, src) for it in be._item_types_of(lib)}
+        out["libraries"] = libs
+        full = repo_path(os.path.join("output", "ifc_classification_library.json"))
+        with open(full, "w", encoding="utf-8") as fh:
+            json.dump(out, fh, ensure_ascii=False, indent=1, default=str)
+        out["written_to"] = full
+        # keep the environment report small: only pick list sizes and the first values
+        for its in libs.values():
+            for props in its.values():
+                for p in props:
+                    pl = p.get("picklist")
+                    if pl and len(pl.get("values", [])) > 25:
+                        pl["values"] = pl["values"][:25] + ["... (%d)" % pl.get("count", 0)]
+    except Exception as e:
+        out["error"] = "%s: %s" % (type(e).__name__, e)
+    return out
 
 
 def main():
@@ -139,6 +179,8 @@ def main():
         report["active_model"] = be.check_model()
         report["bentley_ifc_classification_in_active_dgn"] = be.find_bentley_ifc_classification(
             cfg.mapping["bentley_ifc_classification"])
+        report["ifc_classification_library"] = describe_ifc_classification_dgnlib(
+            be, cfg.mapping["bentley_ifc_classification"])
         # GCS key names (read only)
         from MSPyDgnPlatform import DgnGCS
         gcs = {}
@@ -154,13 +196,16 @@ def main():
                                                              "_USTN_CONFIGURATION")]
     else:
         roots = []
-    for env in ("ProgramData", "ProgramFiles", "LOCALAPPDATA"):
+    for env in ("ProgramData", "ProgramFiles", "LOCALAPPDATA", "APPDATA"):
         if os.environ.get(env):
             roots.append(os.path.join(os.environ[env], "Bentley"))
+    if os.environ.get("CommonProgramFiles"):
+        roots.append(os.path.join(os.environ["CommonProgramFiles"], "Bentley Shared"))
     roots = list(dict.fromkeys(r for r in roots if r))
+    report["search_roots"] = roots
     files = _search(roots, PATTERNS)
-    report["bentley_files"] = files
-    templates = list(dict.fromkeys([f for f in files if _is_mapping_template(f)] + _search_json_in_ifc_dirs(roots)))
+    report["bentley_files"] = list(dict.fromkeys(files))
+    templates = list(dict.fromkeys([f for f in files if _is_mapping_template(f)] + _search_mapping_json(roots)))
     report["schema_mapping_candidates"] = templates
     env_dir = repo_path(os.path.join("output", "env"))
     os.makedirs(env_dir, exist_ok=True)

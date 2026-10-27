@@ -13,10 +13,10 @@ not a result of a MicroStation export).
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import os
 import sys
-import tempfile
 import xml.etree.ElementTree as ET
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,44 +31,45 @@ from validation.ids_conflicts import find_conflicts, parse as parse_ids  # noqa:
 
 NS = {"ids": "http://standards.buildingsmart.org/IDS", "xs": "http://www.w3.org/2001/XMLSchema"}
 
-# How each IDS requirement is produced (DGN source -> IFC mechanism)
+# How each IDS requirement is to be produced by MicroStation's exporter
+# (DGN source -> Item Type -> exporter mechanism).  "prov Pxx" refers to the
+# exporter probe (microstation/probe_exporter.py, docs/IFC_relationer.md).
 SPEC_SOURCES = {
-    "#1": ("Bärare PRJ-1 (BU26_SPATIAL)", "BU26_Object: IfcName, IfcLongName, IfcDescription, Phase",
-           "Exportören skapar IfcProject (ProjectConfigurations.ProjectName); efterbearbetning sätter LongName/Phase/OwnerHistory"),
-    "#2": ("Bärare SITE-1", "BU26_Object: IfcName, IfcLongName, IfcDescription, RefLatitude/RefLongitude/RefElevation; Pset_SpaceCommon.GrossPlannedArea",
-           "Exportören skapar IfcSite (SiteName); efterbearbetning: attribut, Ref*, Pset_SpaceCommon (IfcAreaMeasure), IfcRelAggregates Project->Site"),
-    "#3": ("Bärare SZ-E1", "BU26_Object: IfcName, IfcLongName, IfcDescription, IfcObjectType, IfcPredefinedType",
-           "Bentley IFC Classification -> IfcSpatialZone (om exportören stöder det), annars efterbearbetning; IfcRelAggregates Project->Zone, IfcRelReferencedInSpatialStructure"),
-    "#4": ("Linjeföringar AL-N/AL-S/AL-V (3D-linjesträngar, BU26_ALIGNMENT)", "BU26_Object: IfcName, IfcDescription, IfcObjectType, Start/EndStation",
-           "Efterbearbetning: IfcAlignment med horisontal/vertikal/cant-layout och geometri från LandXML, aggregerad till IfcProject, refererad i IfcSite"),
-    "#5": ("Bärare RW-1", "BU26_Object + BU26_Classification (CoClass_BV CAE)",
-           "IfcRailway USERDEFINED/ObjectType; IfcRelAggregates Site->Railway; IfcRelAssociatesClassification"),
-    "#6": ("Bärare RP-N1, RP-N2, RP-S1, RP-S2 (fotavtryck)", "BU26_Object, BU26_Classification (CoClass_KS DA10), Pset_RailwayTrackStructurePart",
-           "IfcRailwayPart PLAINTRACK, UsageType LONGITUDINAL; IfcRelAggregates Railway->Part; IfcRelAssignsToGroup BuiltSystem"),
-    "#7": ("Räler RAIL_MAIN (BU26_RAIL_MAIN)", "BU26_Object (IfcRail/RAIL, IfcDescription innerräl/ytterräl, SpatialParent), BU26_Classification WRA20",
-           "IfcRail.RAIL i IfcRelContainedInSpatialStructure -> PLAINTRACK"),
-    "#8": ("Bärare RP-VA, RP-VB", "BU26_Object, BU26_Classification (CoClass_KS DA20), Pset_RailwayTrackStructurePart",
-           "IfcRailwayPart TURNOUTTRACK; aggregering + grupp som #6"),
-    "#9": ("Slipers SLEEPER (BU26_SLEEPER)", "BU26_Object (IfcTrackElement/SLEEPER), BU26_Classification ULE14",
-           "IfcTrackElement.SLEEPER i PLAINTRACK"),
-    "#10": ("Genomgående räler RAIL_TURNOUT", "BU26_Object (IfcRail/RAIL), BU26_Classification WRA20",
-            "IfcRail.RAIL i TURNOUTTRACK"),
-    "#11": ("Växeldriv SWITCH_ASSEMBLY (BU26_SWITCH_ASSEMBLY)", "BU26_Object (SpatialRelation=aggregated), BU26_Classification QSB, Pset_ElementAssemblyTypeTractionSwitchingAssembly",
-            "IfcElementAssembly.TRACTION_SWITCHING_ASSEMBLY, IfcRelAggregates TURNOUTTRACK->Assembly; RatedVoltage IfcElectricVoltageMeasure, NominalPower IfcPowerMeasure"),
-    "#12": ("Stödräler RAIL_STOCK (BU26_RAIL_STOCK)", "BU26_Object (IfcRail/STOCKRAIL), WRA20", "IfcRail.STOCKRAIL i TURNOUTTRACK"),
-    "#13": ("Moträler RAIL_CHECK (BU26_RAIL_CHECK)", "BU26_Object (IfcRail/CHECKRAIL), WRA20", "IfcRail.CHECKRAIL i TURNOUTTRACK"),
-    "#14": ("Korsningar FROG (BU26_FROG)", "BU26_Object (IfcTrackElement/FROG), WRA20", "IfcTrackElement.FROG i TURNOUTTRACK"),
-    "#15": ("Bärare BS-1", "BU26_Object (IfcName Tvärbanan, IfcLongName Polarexpress), BU26_Classification FS R, Pset_BuiltSystemRailwayTrack",
-            "Efterbearbetning: IfcBuiltSystem RAILWAYTRACK (IfcGroup, ingen geometri), IfcRelAssignsToGroup, Pset med IfcLabel/IfcIdentifier"),
+    "#1": ("SchemaMapping ProjectConfigurations", "-",
+           "ProjectName -> Name (verifierat). LongName/Phase: ingen känd mekanism i exportören"),
+    "#2": ("SchemaMapping ProjectConfigurations", "-",
+           "SiteName -> IfcSite (verifierat). LongName/Description/Pset_SpaceCommon: ingen känd mekanism; Ref* räknas av exportören"),
+    "#3": ("Bärare SZ-E1", "IFC Classification IfcSpatialZone/CONSTRUCTION, BU26_Object",
+           "Klassat element -> IfcSpatialZone (prov P08)"),
+    "#4": ("Linjeföringar AL-N/AL-S/AL-V (3D-linjesträngar)", "IFC Classification IfcAlignment, Pset_Stationing (Station med enhet)",
+           "Klassad linjesträng -> IfcAlignment (prov P07); layouter kräver civil-exportör"),
+    "#5": ("Bärare RW-1", "IFC Classification IfcRailway, BU26_Classification (CoClass_BV CAE)",
+           "Cell IfcRailway runt spårdelarna (prov P05); CoClass-referens (prov P12)"),
+    "#6": ("Bärare RP-N1, RP-N2, RP-S1, RP-S2", "IFC Classification IfcRailwayPart/PLAINTRACK, Pset_RailwayTrackStructurePart, BU26_Classification DA10",
+           "Klassat element/cell -> IfcRailwayPart (prov P02-P04); grupp (prov P09/P10); TrackSupportingStructure skrivs som uppräkning med gemener (exportörens fel, verifierat)"),
+    "#7": ("Räler RAIL_MAIN", "IFC Classification IfcRail/RAIL, BU26_Object.IfcDescription, BU26_Classification WRA20",
+           "Containment via cell IfcRailwayPart (prov P03/P04)"),
+    "#8": ("Bärare RP-VA, RP-VB", "som #6 (TURNOUTTRACK, DA20)", "som #6"),
+    "#9": ("Slipers SLEEPER", "IFC Classification IfcTrackElement/SLEEPER, BU26_Classification ULE14",
+           "Containment via cell IfcRailwayPart (prov P03/P04)"),
+    "#10": ("Genomgående räler RAIL_TURNOUT", "IFC Classification IfcRail/RAIL, WRA20", "Containment i TURNOUTTRACK (prov P05)"),
+    "#11": ("Växeldriv SWITCH_ASSEMBLY", "IFC Classification IfcElementAssembly/TRACTION_SWITCHING_ASSEMBLY, Pset med enheter V/W, QSB",
+            "Cell IfcElementAssembly (prov P06); måttyper via enheter (prov P01)"),
+    "#12": ("Stödräler RAIL_STOCK", "IFC Classification IfcRail/STOCKRAIL, WRA20", "Klass (prov P01) + containment (prov P05)"),
+    "#13": ("Moträler RAIL_CHECK", "IFC Classification IfcRail/CHECKRAIL, WRA20", "Klass + containment (prov P05)"),
+    "#14": ("Korsningar FROG", "IFC Classification IfcTrackElement/FROG, WRA20", "Klass + containment (prov P05)"),
+    "#15": ("Bärare BS-1 + Named Group BU26_BS-1", "IFC Classification IfcBuiltSystem, Pset_BuiltSystemRailwayTrack, FS R",
+            "Klassat element / Named Group -> IfcBuiltSystem (prov P09/P10); TrackUsage/TrackCharacteristic som uppräkning med gemener (verifierat)"),
     "#16": ("Räler RAIL_MAIN", "som #7", "som #7"),
-    "#17": ("Växelslipers SLEEPER_TURNOUT (BU26_SLEEPER_TURNOUT)", "BU26_Object (IfcTrackElement/SLEEPER), ULE14", "IfcTrackElement.SLEEPER i TURNOUTTRACK"),
-    "#18": ("Ballast BALLAST (BU26_BALLAST)", "Qto_CourseBaseQuantities (beräknat ur solidens geometri)",
-            "IfcElementQuantity Qto_CourseBaseQuantities: IfcQuantityLength/Volume/Weight"),
-    "#19": ("Slipers SLEEPER + SLEEPER_TURNOUT", "Qto_SleeperBaseQuantities (lådans mått)", "IfcElementQuantity med IfcQuantityLength"),
-    "#20": ("DGN-modellens masterenhet = m", "-", "Exportören: IfcSIUnit LENGTHUNIT METRE utan prefix (kontrolleras, ändras ej)"),
-    "#21": ("DGN Geographic Coordinate System SWEREF 99 18 00", "config coordinate_system",
-            "Exportörens georeferering (om GCS satt); efterbearbetning: IfcProjectedCRS EPSG:3011 / SWEREF 99 18 00 / RH 2000, IfcMapConversion uppmätt"),
-    "#22": ("Ballast BALLAST", "BU26_Classification: CoClass_KO UTA10 + CoClass_PR CEB.3", "Två IfcClassificationReference; IfcCourse i IfcRailwayPart"),
+    "#17": ("Växelslipers SLEEPER_TURNOUT", "IFC Classification IfcTrackElement/SLEEPER, ULE14", "Containment i TURNOUTTRACK (prov P05)"),
+    "#18": ("Ballast BALLAST", "Item Type Qto_CourseBaseQuantities med enheter (m, m³, kg)",
+            "IfcElementQuantity eller måttyper (prov P11); utan enheter IfcReal i IfcPropertySet (verifierat)"),
+    "#19": ("Slipers SLEEPER + SLEEPER_TURNOUT", "Item Type Qto_SleeperBaseQuantities med enhet m", "som #18"),
+    "#20": ("DGN-modellens masterenhet = m", "-", "IfcSIUnit LENGTHUNIT METRE utan prefix (verifierat)"),
+    "#21": ("DGN:ens GCS", "config coordinate_system (EPSG 5850 först)",
+            "EPSG:3011 verifierat, VerticalDatum blev SWEREF1999; EPSG 5850 med RH 2000 (prov GCS)"),
+    "#22": ("Ballast BALLAST", "IFC Classification IfcCourse/BALLASTBED, CoClass_KO UTA10 + CoClass_PR CEB.3",
+            "Klass + containment (prov P03-P05); två CoClass-referenser (prov P12)"),
 }
 
 
@@ -111,7 +112,8 @@ def ids_requirements(path):
     return out
 
 
-def requirements_matrix(cfg, pipeline=None) -> str:
+def requirements_matrix(cfg, export_validation=None) -> str:
+    """``export_validation``: validate_ifc.py report of a real MicroStation export."""
     ids_path = cfg.file("ids")
     conflicts = find_conflicts(parse_ids(ids_path))
     conf = {}
@@ -119,28 +121,28 @@ def requirements_matrix(cfg, pipeline=None) -> str:
         conf.setdefault(c["spec_a"], []).append(c["spec_b"])
         conf.setdefault(c["spec_b"], []).append(c["spec_a"])
     lines = ["# Kravmatris IDS -> DGN -> Item Type -> IFC", "",
-             "Genererad av `tools/make_docs.py` ur `input/Branschutmaningen_2026.ids` (oförändrad) och konfigurationen.",
-             "", "Kolumnen *Testkörning (simulerad export)* visar resultatet när exportkedjan körs på den **simulerade** "
-             "exportfixturen i `tests/fixtures/simulated_export.py` – inte på en verklig MicroStation-export. "
-             "Den verkliga statusen fås av `validation/validate_ifc.py` efter export i MicroStation.", "",
-             "| IDS | Tillämplighet | Krav (fasetter) | DGN-objekt | Item Type-fält | IFC-mappning / mekanism | Förväntat IFC-resultat | Motsägelse i IDS | Testkörning (simulerad export) |",
-             "|---|---|---|---|---|---|---|---|---|"]
+             "Genererad av `tools/make_docs.py` ur `input/Branschutmaningen_2026.ids` (oförändrad) och konfigurationen.", "",
+             "IFC-filen skapas enbart av MicroStations exportör och ändras inte. Kolumnen *Mekanism* anger hur exportören "
+             "ska få fram kravet ur DGN:en. \"prov Pxx\" är objekt i exportörsprovet (`microstation/probe_exporter.py`), "
+             "se `docs/IFC_relationer.md`. Kolumnen *Verklig export* är resultatet för den oförändrade exportfilen från "
+             "MicroStation 2026, körning 1 (`docs/evidence/microstation2026_run1/`). I den körningen saknades "
+             "\"IFC Classification\" i DGN:en.", "",
+             "| IDS | Tillämplighet | Krav (fasetter) | DGN-objekt | Item Type / källa | Mekanism i exportören | Motsägelse i IDS | Verklig export (körning 1) |",
+             "|---|---|---|---|---|---|---|---|"]
     for name, ent, reqs in ids_requirements(ids_path):
         key = name.split()[0]
         src = SPEC_SOURCES.get(key, ("", "", ""))
-        expected = "Godkänd" if name not in conf else "Kan inte godkännas för alla objekt (motsägelse)"
-        status = ""
-        if pipeline is not None:
-            status = "godkänd" if name in pipeline["passed_specs"] else (
-                "underkänd (endast IDS-motsägelse)" if name in pipeline["failed_specs_only_due_to_ids_conflicts"]
-                else "UNDERKÄND")
-        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
-            name.replace("|", "/"), ent, "<br>".join(reqs), src[0], src[1], src[2], expected,
+        status = "-"
+        if export_validation is not None:
+            status = "godkänd" if name in export_validation["passed_specs"] else "underkänd"
+        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s |" % (
+            name.replace("|", "/"), ent, "<br>".join(reqs), src[0], src[1], src[2],
             ", ".join(conf.get(name, [])) or "-", status))
     lines += ["", "## Motsägelser som hittades automatiskt (`validation/ids_conflicts.py`)", ""]
     for c in conflicts:
         lines.append("* **%s** mot **%s** (%s): %s" % (c["spec_a"], c["spec_b"], c["applicability"], "; ".join(c["reasons"])))
-    lines += ["", "Se `docs/IDS_och_underlag_konflikter.md` för hur modellen hanterar varje motsägelse."]
+    lines += ["", "Se `docs/IDS_och_underlag_konflikter.md` för hur modellen hanterar varje motsägelse. "
+              "Motsägelserna gör att högst 17/22 kan godkännas."]
     return "\n".join(lines) + "\n"
 
 
@@ -201,31 +203,19 @@ def geometry_report(cfg) -> str:
     return "\n".join(L) + "\n"
 
 
-def pipeline_check():
-    from export.complete_ifc_structure import Completer
-    from model.railway_model import build_design_model
-    from tests.fixtures.simulated_export import simulate
-    from validation.validate_ifc import validate
-    import ifcopenshell
-    cfg = load_config(mode="preview")
-    with tempfile.TemporaryDirectory() as d:
-        raw = os.path.join(d, "raw.ifc")
-        simulate(cfg, build_design_model(cfg), raw, classified=False, include_bentley_item=False)
-        f = ifcopenshell.open(raw)
-        Completer(f, cfg, log=lambda *a: None).run()
-        out = os.path.join(d, "out.ifc")
-        f.write(out)
-        return validate(out, cfg.file("ids"))
-
-
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pipeline-check", action="store_true")
+    ap.add_argument("--export-validation",
+                    default=repo_path("docs/evidence/microstation2026_run1/validation_report_raw_export.json"),
+                    help="validate_ifc.py JSON report of a real MicroStation export")
     a = ap.parse_args(argv)
     cfg = load_config(mode="full")
-    pipe = pipeline_check() if a.pipeline_check else None
+    ev = None
+    if a.export_validation and os.path.exists(a.export_validation):
+        with open(a.export_validation, encoding="utf-8") as fh:
+            ev = json.load(fh)
     with open(repo_path("docs/Kravmatris.md"), "w", encoding="utf-8") as fh:
-        fh.write(requirements_matrix(cfg, pipe))
+        fh.write(requirements_matrix(cfg, ev))
     with open(repo_path("docs/Geometri_verifiering.md"), "w", encoding="utf-8") as fh:
         fh.write(geometry_report(cfg))
     print("docs/Kravmatris.md, docs/Geometri_verifiering.md skrivna")

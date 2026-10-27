@@ -26,6 +26,8 @@ class BuildContext:
     counts: Dict[str, int] = field(default_factory=dict)
     timings: Dict[str, float] = field(default_factory=dict)
     errors: List[str] = field(default_factory=list)
+    # IFC class/type values not offered by Bentley's pick lists -> {value: count}
+    picklist_misses: Dict[str, int] = field(default_factory=dict)
 
     @property
     def version_value(self) -> str:
@@ -49,8 +51,10 @@ def place_components(ctx: BuildContext, components: List[Component], label: str)
         color, weight = ctx.symbology(comp.level)
         try:
             el = place(ctx.backend, comp.geometry, ctx.level_ids[comp.level], color, weight, kind)
-            attach(ctx.backend, el, comp, ctx.library, ctx.mode, ctx.source_file, ctx.bentley_ifc, ctx.version_value,
-                   ctx.cfg.mapping["bentley_ifc_classification"].get("apply_to_entities"))
+            bic = attach(ctx.backend, el, comp, ctx.library, ctx.mode, ctx.source_file, ctx.bentley_ifc,
+                         ctx.version_value, ctx.cfg.mapping["bentley_ifc_classification"].get("apply_to_entities"))
+            for miss in (bic or {}).get("unmatched", []):
+                ctx.picklist_misses[miss] = ctx.picklist_misses.get(miss, 0) + 1
             ctx.element_ids[comp.object_id] = ctx.backend.element_id(el)
             ctx.counts[comp.category] = ctx.counts.get(comp.category, 0) + 1
             n += 1
