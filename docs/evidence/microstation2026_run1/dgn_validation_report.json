@@ -1,0 +1,30 @@
+{
+ "elements_checked": 3477,
+ "expected_objects": 3477,
+ "missing_objects": [],
+ "missing_count": 0,
+ "issues": [],
+ "issue_count": 0,
+ "by_category": {
+  "ALIGNMENT": 3,
+  "SPATIAL_PROJECT": 1,
+  "SPATIAL_SITE": 1,
+  "SPATIAL_RAILWAY": 1,
+  "SPATIAL_ZONE": 1,
+  "BUILT_SYSTEM": 1,
+  "SPATIAL_RAILWAYPART_PLAIN": 4,
+  "SPATIAL_RAILWAYPART_TURNOUT": 2,
+  "BALLAST": 6,
+  "SLEEPER": 3292,
+  "SLEEPER_TURNOUT": 117,
+  "RAIL_MAIN": 16,
+  "RAIL_TURNOUT": 16,
+  "RAIL_STOCK": 4,
+  "RAIL_BLADE": 4,
+  "RAIL_CHECK": 4,
+  "FROG": 2,
+  "SWITCH_ASSEMBLY": 2
+ },
+ "ok": true,
+ "backend": "MicroStation"
+}

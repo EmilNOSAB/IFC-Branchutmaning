@@ -1,0 +1,616 @@
+{
+ "file": "C:\\Users\\emisan\\Downloads\\IFC-Branchutmaning-claude-microstation-dgn-ifc-export-81beoe\\output\\Branschutmaningen_2026_bentley_export.ifc",
+ "schema": "IFC4X3_ADD2",
+ "originating_system": null,
+ "product_counts": {
+  "IfcBuildingElementProxy": 3477,
+  "IfcSite": 1
+ },
+ "bu26_objects_found": 3477,
+ "class_by_category": {
+  "ALIGNMENT": {
+   "IfcBuildingElementProxy.None": 3
+  },
+  "SPATIAL_PROJECT": {
+   "IfcBuildingElementProxy.None": 1
+  },
+  "SPATIAL_SITE": {
+   "IfcBuildingElementProxy.None": 1
+  },
+  "SPATIAL_RAILWAY": {
+   "IfcBuildingElementProxy.None": 1
+  },
+  "SPATIAL_ZONE": {
+   "IfcBuildingElementProxy.None": 1
+  },
+  "BUILT_SYSTEM": {
+   "IfcBuildingElementProxy.None": 1
+  },
+  "SPATIAL_RAILWAYPART_PLAIN": {
+   "IfcBuildingElementProxy.None": 4
+  },
+  "SPATIAL_RAILWAYPART_TURNOUT": {
+   "IfcBuildingElementProxy.None": 2
+  },
+  "BALLAST": {
+   "IfcBuildingElementProxy.None": 6
+  },
+  "SLEEPER": {
+   "IfcBuildingElementProxy.None": 3292
+  },
+  "SLEEPER_TURNOUT": {
+   "IfcBuildingElementProxy.None": 117
+  },
+  "RAIL_MAIN": {
+   "IfcBuildingElementProxy.None": 16
+  },
+  "RAIL_TURNOUT": {
+   "IfcBuildingElementProxy.None": 16
+  },
+  "RAIL_STOCK": {
+   "IfcBuildingElementProxy.None": 4
+  },
+  "RAIL_BLADE": {
+   "IfcBuildingElementProxy.None": 4
+  },
+  "RAIL_CHECK": {
+   "IfcBuildingElementProxy.None": 4
+  },
+  "FROG": {
+   "IfcBuildingElementProxy.None": 2
+  },
+  "SWITCH_ASSEMBLY": {
+   "IfcBuildingElementProxy.None": 2
+  }
+ },
+ "class_mismatches": 3474,
+ "class_mismatch_sample": [
+  {
+   "object_id": "AL-N",
+   "expected": "IfcAlignment.USERDEFINED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "AL-S",
+   "expected": "IfcAlignment.USERDEFINED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "AL-V",
+   "expected": "IfcAlignment.USERDEFINED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RW-1",
+   "expected": "IfcRailway.USERDEFINED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "SZ-E1",
+   "expected": "IfcSpatialZone.CONSTRUCTION",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1",
+   "expected": "IfcRailwayPart.PLAINTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-VA",
+   "expected": "IfcRailwayPart.TURNOUTTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N2",
+   "expected": "IfcRailwayPart.PLAINTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-S1",
+   "expected": "IfcRailwayPart.PLAINTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-VB",
+   "expected": "IfcRailwayPart.TURNOUTTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-S2",
+   "expected": "IfcRailwayPart.PLAINTRACK",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-VA-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N2-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-S1-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-VB-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-S2-BALLAST",
+   "expected": "IfcCourse.BALLASTBED",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00001",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00002",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00003",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00004",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00005",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00006",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00007",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00008",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00009",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00010",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00011",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00012",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00013",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00014",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00015",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00016",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00017",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00018",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00019",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00020",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00021",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00022",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00023",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00024",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00025",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00026",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00027",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00028",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00029",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00030",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00031",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00032",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  },
+  {
+   "object_id": "RP-N1-SLP-00033",
+   "expected": "IfcTrackElement.SLEEPER",
+   "got": "IfcBuildingElementProxy.None"
+  }
+ ],
+ "property_set_names": {
+  "[Generic].[PhysicalObject]": 3477,
+  "BU26_Object": 3477,
+  "BU26_Classification": 3471,
+  "Qto_SleeperBaseQuantities": 3409,
+  "Pset_TrackElementOccurrenceSleeper": 3409,
+  "Pset_RailwayTrackStructurePart": 6,
+  "Pset_CourseCommon": 6,
+  "Qto_CourseBaseQuantities": 6,
+  "Pset_ElementAssemblyTypeTractionSwitchingAssembly": 2,
+  "Pset_SpaceCommon": 1,
+  "Pset_BuiltSystemRailwayTrack": 1
+ },
+ "property_set_kinds": {
+  "IfcPropertySet:-": 3477,
+  "IfcPropertySet:BU26_Object": 3477,
+  "IfcPropertySet:Pset_SpaceCommon": 1,
+  "IfcPropertySet:BU26_Classification": 3471,
+  "IfcPropertySet:Pset_BuiltSystemRailwayTrack": 1,
+  "IfcPropertySet:Pset_RailwayTrackStructurePart": 6,
+  "IfcPropertySet:Pset_CourseCommon": 6,
+  "IfcPropertySet:Qto_CourseBaseQuantities": 6,
+  "IfcPropertySet:Qto_SleeperBaseQuantities": 3409,
+  "IfcPropertySet:Pset_TrackElementOccurrenceSleeper": 3409,
+  "IfcPropertySet:Pset_ElementAssemblyTypeTractionSwitchingAssembly": 2
+ },
+ "property_value_types": {
+  "BU26_Classification.CoClassIdentification": {
+   "IfcText": 3471
+  },
+  "BU26_Classification.CoClassIdentification2": {
+   "IfcText": 6
+  },
+  "BU26_Classification.CoClassName": {
+   "IfcText": 3471
+  },
+  "BU26_Classification.CoClassName2": {
+   "IfcText": 6
+  },
+  "BU26_Classification.CoClassSystem": {
+   "IfcText": 3471
+  },
+  "BU26_Classification.CoClassSystem2": {
+   "IfcText": 6
+  },
+  "BU26_Object.AlignmentId": {
+   "IfcText": 3472
+  },
+  "BU26_Object.BU26_ObjectId": {
+   "IfcText": 3477
+  },
+  "BU26_Object.EndStation": {
+   "IfcReal": 3477
+  },
+  "BU26_Object.GroupIds": {
+   "IfcText": 3469
+  },
+  "BU26_Object.IfcDescription": {
+   "IfcText": 3477
+  },
+  "BU26_Object.IfcEntity": {
+   "IfcText": 3477
+  },
+  "BU26_Object.IfcLongName": {
+   "IfcText": 11
+  },
+  "BU26_Object.IfcName": {
+   "IfcText": 3477
+  },
+  "BU26_Object.IfcObjectType": {
+   "IfcText": 5
+  },
+  "BU26_Object.IfcPredefinedType": {
+   "IfcText": 3475
+  },
+  "BU26_Object.Material": {
+   "IfcText": 3415
+  },
+  "BU26_Object.ModelMode": {
+   "IfcText": 3477
+  },
+  "BU26_Object.ObjectCategory": {
+   "IfcText": 3477
+  },
+  "BU26_Object.Phase": {
+   "IfcText": 1
+  },
+  "BU26_Object.RailPosition": {
+   "IfcText": 32
+  },
+  "BU26_Object.RailwayPartId": {
+   "IfcText": 3469
+  },
+  "BU26_Object.RefElevation": {
+   "IfcReal": 3477
+  },
+  "BU26_Object.RefLatitude": {
+   "IfcReal": 3477
+  },
+  "BU26_Object.RefLongitude": {
+   "IfcReal": 3477
+  },
+  "BU26_Object.Side": {
+   "IfcText": 36
+  },
+  "BU26_Object.SourceFile": {
+   "IfcText": 3477
+  },
+  "BU26_Object.SpatialParent": {
+   "IfcText": 3475
+  },
+  "BU26_Object.SpatialRelation": {
+   "IfcText": 3477
+  },
+  "BU26_Object.StartStation": {
+   "IfcReal": 3477
+  },
+  "BU26_Object.Track": {
+   "IfcText": 42
+  },
+  "BU26_Object.TurnoutId": {
+   "IfcText": 16
+  },
+  "BU26_Object.UsageType": {
+   "IfcText": 6
+  },
+  "Pset_BuiltSystemRailwayTrack.TrackID": {
+   "IfcIdentifier": 1
+  },
+  "Pset_BuiltSystemRailwayTrack.TrackNumber": {
+   "IfcIdentifier": 1
+  },
+  "Pset_CourseCommon.NominalLength": {
+   "IfcReal": 6
+  },
+  "Pset_CourseCommon.NominalThickness": {
+   "IfcReal": 6
+  },
+  "Pset_CourseCommon.NominalWidth": {
+   "IfcReal": 6
+  },
+  "Pset_ElementAssemblyTypeTractionSwitchingAssembly.NominalPower": {
+   "IfcReal": 2
+  },
+  "Pset_ElementAssemblyTypeTractionSwitchingAssembly.RatedVoltage": {
+   "IfcReal": 2
+  },
+  "Pset_RailwayTrackStructurePart.HasBallastTrack": {
+   "IfcBoolean": 6
+  },
+  "Pset_RailwayTrackStructurePart.HasCWR": {
+   "IfcBoolean": 6
+  },
+  "Pset_RailwayTrackStructurePart.IsSunExposed": {
+   "IfcBoolean": 6
+  },
+  "Pset_SpaceCommon.GrossPlannedArea": {
+   "IfcReal": 1
+  },
+  "Pset_TrackElementOccurrenceSleeper.HasSpecialEquipment": {
+   "IfcBoolean": 3409
+  },
+  "Pset_TrackElementOccurrenceSleeper.IsContaminatedSleeper": {
+   "IfcBoolean": 3409
+  },
+  "Qto_CourseBaseQuantities.GrossVolume": {
+   "IfcReal": 6
+  },
+  "Qto_CourseBaseQuantities.Length": {
+   "IfcReal": 6
+  },
+  "Qto_CourseBaseQuantities.Thickness": {
+   "IfcReal": 6
+  },
+  "Qto_CourseBaseQuantities.Volume": {
+   "IfcReal": 6
+  },
+  "Qto_CourseBaseQuantities.Weight": {
+   "IfcReal": 6
+  },
+  "Qto_CourseBaseQuantities.Width": {
+   "IfcReal": 6
+  },
+  "Qto_SleeperBaseQuantities.Height": {
+   "IfcReal": 3409
+  },
+  "Qto_SleeperBaseQuantities.Length": {
+   "IfcReal": 3409
+  },
+  "Qto_SleeperBaseQuantities.Width": {
+   "IfcReal": 3409
+  },
+  "[Generic].[PhysicalObject].Bounding Box High": {
+   "IfcText": 3477
+  },
+  "[Generic].[PhysicalObject].Bounding Box Low": {
+   "IfcText": 3477
+  },
+  "[Generic].[PhysicalObject].Federation GUID": {
+   "IfcText": 3477
+  },
+  "[Generic].[PhysicalObject].In Spatial Index": {
+   "IfcBoolean": 3477
+  },
+  "[Generic].[PhysicalObject].Last Modified": {
+   "IfcDateTime": 3477
+  },
+  "[Generic].[PhysicalObject].Origin": {
+   "IfcText": 3477
+  },
+  "[Generic].[PhysicalObject].Pitch": {
+   "IfcReal": 3477
+  },
+  "[Generic].[PhysicalObject].Roll": {
+   "IfcReal": 3477
+  },
+  "[Generic].[PhysicalObject].User Label": {
+   "IfcText": 3477
+  },
+  "[Generic].[PhysicalObject].Yaw": {
+   "IfcReal": 3477
+  }
+ },
+ "relationships": {
+  "IfcRelContainedInSpatialStructure": 1,
+  "IfcRelAggregates": 1,
+  "IfcRelDefinesByProperties": 17265
+ },
+ "containment": {
+  "IfcSite <- 3477 elements": 1
+ },
+ "aggregation": {
+  "IfcProject -> IfcSite": 1
+ },
+ "groups": [],
+ "classifications": [],
+ "classification_references": 0,
+ "units": [
+  {
+   "type": "LENGTHUNIT",
+   "name": "METRE",
+   "prefix": null
+  },
+  {
+   "type": "AREAUNIT",
+   "name": "SQUARE_METRE",
+   "prefix": null
+  },
+  {
+   "type": "VOLUMEUNIT",
+   "name": "CUBIC_METRE",
+   "prefix": null
+  },
+  {
+   "type": "PLANEANGLEUNIT",
+   "name": "RADIAN",
+   "prefix": null
+  }
+ ],
+ "map_conversion": [
+  {
+   "type": "IfcMapConversion",
+   "SourceCRS": "#14=IfcGeometricRepresentationContext($,'Model',3,1.E-07,#13,#15)",
+   "TargetCRS": "#27=IfcProjectedCRS('EPSG:3011','SWEREF 99 18 00','SWEREF1999','SWEREF1999','TM',$,#19)",
+   "Eastings": 0.0,
+   "Northings": 0.0,
+   "OrthogonalHeight": 0.0,
+   "XAxisAbscissa": 1.0,
+   "XAxisOrdinate": 0.0,
+   "Scale": 1.0
+  }
+ ],
+ "projected_crs": [
+  {
+   "type": "IfcProjectedCRS",
+   "Name": "EPSG:3011",
+   "Description": "SWEREF 99 18 00",
+   "GeodeticDatum": "SWEREF1999",
+   "VerticalDatum": "SWEREF1999",
+   "MapProjection": "TM",
+   "MapZone": null,
+   "MapUnit": "#19=IfcSIUnit(*,.LENGTHUNIT.,$,.METRE.)"
+  }
+ ],
+ "spatial_tree": [
+  "IfcProject  BH55",
+  "  IfcSite  KG55-OMR"
+ ],
+ "post_step_needed_for": [
+  "classes",
+  "railway_parts",
+  "containment_in_parts",
+  "built_system_group",
+  "classification",
+  "quantity_sets",
+  "alignments"
+ ]
+}

@@ -141,6 +141,7 @@ class Completer:
         self.classifications()
         self.property_sets()
         self.cleanup()
+        self.header()
         return self.summary()
 
     def owner_history(self):
@@ -629,6 +630,24 @@ class Completer:
             return f.create_entity(ifc_type, str(v))
         return f.create_entity(ifc_type, _float(value))
 
+    @staticmethod
+    def _plain_value(v):
+        """Exported values as single Python values.
+
+        MicroStation 2026's exporter writes properties that have an enumeration
+        in the IFC 4.3 Pset template (TrackSupportingStructure, TrackUsage,
+        TrackCharacteristic) as IfcPropertyEnumeratedValue with LOWER-CASE
+        values typed IFCTIME, e.g. (IFCTIME('subgradelayer')); IfcOpenShell
+        returns them as a list.  The DGN Item Type holds the upper-case IFC
+        enumeration label, so the first value is taken and upper-cased."""
+        if isinstance(v, (list, tuple)):
+            if not v:
+                return None
+            v = v[0]
+            if isinstance(v, str):
+                v = v.upper()
+        return v
+
     def _remove_raw_set(self, ent, pset_ids):
         f = self.f
         for pid in pset_ids or []:
@@ -672,7 +691,13 @@ class Completer:
                     continue
                 if target is rec["entity"]:
                     self._remove_raw_set(target, rec["pset_ids"].get(set_name))
-                clean = {k: v for k, v in values.items() if k in types and v is not None and v != ""}
+                clean = {}
+                for k, v in values.items():
+                    if k not in types:
+                        continue
+                    v = self._plain_value(v)
+                    if v is not None and v != "":
+                        clean[k] = v
                 key = (set_name, tuple(sorted((k, str(v)) for k, v in clean.items())))
                 ps = shared.get(key)
                 if ps is None:
@@ -700,6 +725,17 @@ class Completer:
         self.change("create", "typed property/quantity sets", unique_sets=n_sets, relations=len(members))
 
     # ------------------------------------------------------------------ cleanup
+    def header(self):
+        """The exporter writes FILE_NAME(...,'ODA SDAI 25.8',$,$): originating_system
+        and authorization are required strings (2 schema validation errors)."""
+        fn = self.f.header.file_name
+        app = self.f.by_type("IfcApplication")
+        exporter = " / ".join("%s %s" % (a.ApplicationFullName, a.Version) for a in app) or "MicroStation IFC export"
+        old = (fn.originating_system, fn.authorization)
+        fn.originating_system = "%s + BU26 complete_ifc_structure.py" % exporter
+        fn.authorization = fn.authorization or "none"
+        self.change("edit", "FILE_NAME header", old=old, new=(fn.originating_system, fn.authorization))
+
     def cleanup(self):
         f = self.f
         removed = 0

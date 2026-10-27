@@ -1,6 +1,6 @@
-# Körinstruktion – MicroStation 2025
+# Körinstruktion – MicroStation 2025/2026
 
-Instruktionen gäller MicroStation 2025 (IFC 4.3-exporten är en Technology Preview i 2025). Python-delen fungerar även i 2024. Sökvägen till installationen är inte hårdkodad någonstans. `<repo>` står för den mapp där repot ligger.
+Instruktionen gäller MicroStation 2025 och 2026 (första riktiga körningen gjordes i 2026, se `docs/MicroStation_verifiering.md`). Python-delen fungerar även i 2024. Sökvägen till installationen är inte hårdkodad någonstans. `<repo>` står för den mapp där repot ligger.
 
 ## 0. Förberedelser (en gång)
 

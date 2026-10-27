@@ -51,11 +51,19 @@ def _value(f, v):
     return f.createIfcLabel("" if v is None else str(v))
 
 
+MS2026_ENUMERATED = {"TrackSupportingStructure", "TrackUsage", "TrackCharacteristic"}
+
+
 def simulate(cfg: Config, design: DesignModel, path: str, classified: bool = True,
-             shift: Tuple[float, float, float] = (0.0, 0.0, 0.0), include_bentley_item: bool = True) -> str:
+             shift: Tuple[float, float, float] = (0.0, 0.0, 0.0), include_bentley_item: bool = True,
+             ms2026_quirks: bool = False) -> str:
+    """ms2026_quirks mimics what MicroStation 2026's exporter actually wrote in
+    the first real run: enumerated Pset properties as IfcPropertyEnumeratedValue
+    with lower-case IFCTIME values, and FILE_NAME originating_system = $."""
     f = ifcopenshell.file(schema="IFC4X3_ADD2")
     f.header.file_name.name = os.path.basename(path)
-    f.header.file_name.originating_system = "SIMULATED EXPORT - BU26 test fixture (not Bentley)"
+    if not ms2026_quirks:
+        f.header.file_name.originating_system = "SIMULATED EXPORT - BU26 test fixture (not Bentley)"
     person = f.createIfcPerson(None, "Test", "Fixture")
     org = f.createIfcOrganization(None, "BU26 tests")
     pao = f.createIfcPersonAndOrganization(person, org)
@@ -111,7 +119,9 @@ def simulate(cfg: Config, design: DesignModel, path: str, classified: bool = Tru
         if bic:
             sets.append(("IFC Classification", bic["values"]))
         for set_name, values in sets:
-            props = [f.createIfcPropertySingleValue(k, None, _value(f, v), None) for k, v in values.items()]
+            props = [f.createIfcPropertyEnumeratedValue(k, None, [f.createIfcTime(str(v).lower())], None)
+                     if ms2026_quirks and k in MS2026_ENUMERATED else
+                     f.createIfcPropertySingleValue(k, None, _value(f, v), None) for k, v in values.items()]
             ps = f.createIfcPropertySet(ifcopenshell.guid.new(), oh, set_name, None, props)
             f.createIfcRelDefinesByProperties(ifcopenshell.guid.new(), oh, None, None, [el], ps)
     f.createIfcRelContainedInSpatialStructure(ifcopenshell.guid.new(), oh, None, None, contained, site)

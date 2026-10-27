@@ -99,6 +99,23 @@ def test_post_step_reaches_all_satisfiable_specs(tmp_path, preview, classified, 
     assert {"Qto_CourseBaseQuantities", "Qto_SleeperBaseQuantities"} <= set(st["element_quantities"])
 
 
+def test_post_step_handles_microstation_2026_enumerations_and_header(tmp_path, preview):
+    """Regression: the first real MicroStation 2026 export gave 14/22 because
+    enumerated values became the text "['subgradelayer']" (#6, #8, #15) and the
+    header had originating_system = $ (2 schema errors)."""
+    raw, out, _ = _run(tmp_path, preview, classified=False, shift=(0.0, 0.0, 0.0),
+                       include_bentley_item=False, ms2026_quirks=True)
+    assert any(p.is_a("IfcPropertyEnumeratedValue") for p in ifcopenshell.open(raw).by_type("IfcProperty"))
+    r = validate(out, IDS)
+    assert set(r["failed_specs"]) == CONFLICT_SPECS
+    assert r["structure"]["schema_validation_issues"] == 0
+    f = ifcopenshell.open(out)
+    labels = {p.NominalValue.wrappedValue for p in f.by_type("IfcPropertySingleValue")
+              if p.Name in ("TrackSupportingStructure", "TrackUsage", "TrackCharacteristic")}
+    assert labels and all(v.isupper() and "[" not in v for v in labels)
+    assert all(a["layouts"] and "IfcAlignmentHorizontal" in a["layouts"] for a in r["structure"]["alignments"])
+
+
 def test_alignment_geometry_in_model_coordinates(tmp_path, preview):
     import ifcopenshell.geom
     import numpy as np

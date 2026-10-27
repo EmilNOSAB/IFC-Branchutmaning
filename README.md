@@ -2,7 +2,7 @@
 
 Lösningen bygger en tredimensionell, redigerbar **DGN-modell i MicroStation** av banöverbyggnaden (räler, slipers, ballast och spårväxlar) utifrån LandXML-linjeföringarna. Varje element får Item Types med IFC-klass, CoClass, Psets och Qtos. Modellen exporteras till **IFC 4.3 ADD2 med MicroStations egen IFC-exportör**, kompletteras vid behov i ett separat och uttryckligt efterbearbetningssteg och valideras mot original-IDS:en.
 
-> **Status – läs detta först.** Utvecklingen skedde i en Linux-container utan MicroStation (`docs/evidence/environment_report_linux_container.json`). **Ingen DGN och ingen IFC har genererats med MicroStation i det här repot.** Allt som går att köra utan MicroStation är implementerat och testat (51 automatiska tester). Bentley-API-anropen finns i `microstation/msapi.py` och är kontrollerade mot Bentleys API-referens. Det som måste provas inuti MicroStation står i [`docs/MicroStation_verifiering.md`](docs/MicroStation_verifiering.md).
+> **Status – läs detta först.** Utvecklingen skedde i en Linux-container utan MicroStation (`docs/evidence/environment_report_linux_container.json`). Kedjan har därefter körts av användaren i **MicroStation 2026**: DGN med 3 477 element och 0 fel, Bentleys IFC 4.3-export, efterbearbetning och IDS-validering. Med rättningarna efter den körningen ger samma export **17/22** IDS-specifikationer. De 5 underkända beror enbart på motsägelser i IDS:en, se [`docs/evidence/microstation2026_run1/`](docs/evidence/microstation2026_run1/). Allt som går att köra utan MicroStation är testat (55 automatiska tester). Bentley-API-anropen finns i `microstation/msapi.py` och är kontrollerade mot Bentleys API-referens. Det som måste provas inuti MicroStation står i [`docs/MicroStation_verifiering.md`](docs/MicroStation_verifiering.md).
 
 ## Arbetsflöde
 
@@ -54,7 +54,7 @@ output/         resultat från körningarna (kan checkas in för granskning)
 
 ```bash
 python -m pip install -r requirements.txt
-python -m pytest -q                                              # 51 tester
+python -m pytest -q                                              # 55 tester
 python microstation/build_railway_dgn.py --dry-run --mode preview  # hela orkestreringen, ingen DGN skrivs
 python validation/validate_dgn.py --dry-run
 python tools/plot_design_model.py --mode full --out docs/img/vaxelforbindelse_plan.png

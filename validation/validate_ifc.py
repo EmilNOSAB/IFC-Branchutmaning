@@ -82,8 +82,7 @@ def structural_checks(f: ifcopenshell.file, cfg) -> Dict[str, Any]:
     parts = f.by_type("IfcRailwayPart")
     chk["railway_parts"] = sorted(p.PredefinedType for p in parts)
     chk["railway_parts_ok"] = chk["railway_parts"] == ["PLAINTRACK"] * 4 + ["TURNOUTTRACK"] * 2
-    chk["alignments"] = [{"name": a.Name, "layouts": [r.RelatedObjects[0].is_a() if r.RelatedObjects else None
-                                                      for r in a.IsNestedBy]}
+    chk["alignments"] = [{"name": a.Name, "layouts": sorted({o.is_a() for r in a.IsNestedBy for o in r.RelatedObjects})}
                          for a in f.by_type("IfcAlignment") if not ifcopenshell.util.element.get_aggregate(a)
                          or ifcopenshell.util.element.get_aggregate(a).is_a("IfcProject")]
     phys = [e for e in f.by_type("IfcElement")]
