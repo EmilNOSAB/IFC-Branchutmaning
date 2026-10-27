@@ -1,6 +1,6 @@
 # output/
 
-Resultat från körningarna skrivs hit (versioneras inte):
+Resultat från körningarna skrivs hit och kan checkas in för granskning (`output/dryrun/` och `output/env/` ignoreras):
 
 | Fil | Skapas av |
 |---|---|

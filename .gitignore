@@ -1,7 +1,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
-# generated results (DGN, IFC, reports) are produced by running the tools
-output/*
-!output/README.md
+.venv/
 tests/_out/
+# Results in output/ ARE versioned so they can be reviewed (reports, DGN, IFC).
+# Only scratch content is ignored:
+output/dryrun/
+output/env/
+*.dgn.bak
+*.~*

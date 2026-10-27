@@ -47,7 +47,7 @@ validation/     validate_ifc.py (IDS, HTML/JSON), validate_dgn.py (DGN mot desig
 tests/          51 pytest-tester (+ tests/fixtures/simulated_export.py = SIMULERAD export, inte Bentley)
 tools/          plot_design_model.py (plankontroll), make_docs.py (genererar kravmatris och geometrirapport)
 docs/           Kravmatris, konflikter, körinstruktion, verifieringslista, IFC-relationer, geometriverifiering
-output/         resultat från körningarna (versioneras inte)
+output/         resultat från körningarna (kan checkas in för granskning)
 ```
 
 ## Snabbstart utan MicroStation
