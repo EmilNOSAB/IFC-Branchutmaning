@@ -25,3 +25,33 @@ def test_property_types_without_prefix(monkeypatch):
 
     monkeypatch.setattr(msapi, "CustomProperty", FakeCustomProperty, raising=False)
     assert msapi.property_types()["Boolean"] == 2
+
+
+def test_imports_survive_missing_optional_symbols(monkeypatch):
+    """One class in an unexpected module must not break the other imports
+    (first MicroStation run: NameError WString after a failed block import)."""
+    import importlib
+    import sys
+    import types
+    names = {"MSPyBentley": ["WString"],
+             "MSPyBentleyGeom": ["CurveVector", "DgnBoxDetail", "DPoint3d", "DVec3d", "ISolidPrimitive",
+                                 "PolyfaceHeader", "DPoint3dArray"],
+             "MSPyECObjects": ["ECValue"],
+             "MSPyDgnPlatform": ["BaseGCS", "ConfigurationManager", "CustomItemHost", "CustomProperty", "DgnGCS",
+                                 "DraftingElementSchema", "EditElementHandle", "ElementPropertiesSetter",
+                                 "ItemTypeLibrary", "NamedGroup", "NamedGroupFlags", "NamedGroupMemberFlags"],
+             "MSPyMstnPlatform": ["ISessionMgr", "PyCadInputQueue"]}
+    for mod, syms in names.items():
+        m = types.ModuleType(mod)
+        for s in syms:
+            setattr(m, s, type(s, (), {}))
+        monkeypatch.setitem(sys.modules, mod, m)
+    import microstation.msapi as msapi
+    try:
+        msapi = importlib.reload(msapi)
+        assert msapi.MICROSTATION_AVAILABLE and msapi.IMPORT_ERROR is None
+        assert msapi.WString is not None
+        assert set(msapi.MISSING_SYMBOLS) == {"Int32Array", "LineStringHandler", "ShapeHandler"}
+    finally:
+        monkeypatch.undo()
+        importlib.reload(msapi)

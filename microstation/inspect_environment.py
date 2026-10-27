@@ -107,7 +107,10 @@ def main():
         report["microstation"] = "NOT AVAILABLE (%s) - run this script inside MicroStation" % e
     cfg = load_config()
     if inside:
+        from microstation import msapi
         from microstation.msapi import get_config_variable
+        report["msapi_import_error"] = msapi.IMPORT_ERROR
+        report["msapi_missing_symbols"] = list(msapi.MISSING_SYMBOLS)
         report["config_variables"] = {v: get_config_variable(v) for v in CFG_VARS}
         api = {}
         for mod_name, classes in API_CLASSES.items():

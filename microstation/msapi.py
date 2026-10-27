@@ -48,21 +48,43 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .backend import BackendError, DgnBackend
 
-try:  # The MicroStation Python modules only exist inside MicroStation
-    from MSPyBentley import Int32Array, WString  # noqa: F401
-    from MSPyBentleyGeom import (CurveVector, DgnBoxDetail, DPoint3d, DPoint3dArray, DVec3d,  # noqa: F401
-                                 ISolidPrimitive, PolyfaceHeader)
-    from MSPyECObjects import ECValue
-    from MSPyDgnPlatform import (BaseGCS, ConfigurationManager, CustomItemHost, CustomProperty,  # noqa: F401
-                                 DgnGCS, DraftingElementSchema, EditElementHandle, ElementPropertiesSetter,
-                                 ItemTypeLibrary, LineStringHandler, NamedGroup, NamedGroupFlags,
-                                 NamedGroupMemberFlags, ShapeHandler)
-    from MSPyMstnPlatform import ISessionMgr, PyCadInputQueue
+# The MicroStation Python modules only exist inside MicroStation.  Every class
+# is looked up by name in all MSPy modules, so one name that lives in another
+# module (or is missing in an installed version) does not break the others.
+REQUIRED = ["WString", "CurveVector", "DgnBoxDetail", "DPoint3d", "DVec3d", "ISolidPrimitive", "PolyfaceHeader",
+            "ECValue", "BaseGCS", "ConfigurationManager", "CustomItemHost", "CustomProperty", "DgnGCS",
+            "DraftingElementSchema", "EditElementHandle", "ElementPropertiesSetter", "ItemTypeLibrary", "NamedGroup",
+            "NamedGroupFlags", "NamedGroupMemberFlags", "ISessionMgr", "PyCadInputQueue"]
+OPTIONAL = ["Int32Array", "DPoint3dArray", "LineStringHandler", "ShapeHandler"]
+MISSING_SYMBOLS: List[str] = []
+try:
+    import MSPyBentley
+    import MSPyBentleyGeom
+    import MSPyDgnPlatform
+    import MSPyECObjects
+    import MSPyMstnPlatform
+    _MODULES = [MSPyBentley, MSPyBentleyGeom, MSPyECObjects, MSPyDgnPlatform, MSPyMstnPlatform]
     MICROSTATION_AVAILABLE = True
     IMPORT_ERROR = None
 except ImportError as _e:  # pragma: no cover - outside MicroStation
+    _MODULES = []
     MICROSTATION_AVAILABLE = False
     IMPORT_ERROR = str(_e)
+
+
+def _symbol(name: str):
+    for mod in _MODULES:
+        if hasattr(mod, name):
+            return getattr(mod, name)
+    if MICROSTATION_AVAILABLE:
+        MISSING_SYMBOLS.append(name)
+    return None
+
+
+for _name in REQUIRED + OPTIONAL:
+    globals()[_name] = _symbol(_name)
+if MICROSTATION_AVAILABLE and any(n in MISSING_SYMBOLS for n in REQUIRED):
+    IMPORT_ERROR = "missing MicroStation API classes: %s" % [n for n in MISSING_SYMBOLS if n in REQUIRED]
 
 
 def _ok(status) -> bool:
@@ -121,6 +143,11 @@ class MicroStationBackend(DgnBackend):
     def __init__(self, log=print):
         if not MICROSTATION_AVAILABLE:
             raise BackendError("MicroStation Python modules are not available: %s" % IMPORT_ERROR)
+        missing = [n for n in MISSING_SYMBOLS if n in REQUIRED]
+        if missing:
+            raise BackendError("MicroStation API classes not found in MSPy modules: %s" % missing)
+        if MISSING_SYMBOLS:
+            log("Valfria API-klasser saknas (reservvägar används): %s" % MISSING_SYMBOLS)
         self.log = log
         self.dgn_file = ISessionMgr.GetActiveDgnFile()
         self.model = ISessionMgr.GetActiveDgnModel()
@@ -337,10 +364,11 @@ class MicroStationBackend(DgnBackend):
         with IsClosedByEdgePairing() and reused.  Falls back to AddPolygon per
         face WITHOUT Compress(): in the first MicroStation run Compress() merged
         nearby vertices of the rail outline (mm spacing) and broke closure."""
-        pts = DPoint3dArray()
-        for p in vertices:
-            pts.append(self._pt(p))
-        tri = all(len(f) == 3 for f in faces)
+        tri = all(len(f) == 3 for f in faces) and Int32Array is not None and DPoint3dArray is not None
+        if tri:
+            pts = DPoint3dArray()
+            for p in vertices:
+                pts.append(self._pt(p))
         bases = [self._mesh_index_base] if getattr(self, "_mesh_index_base", None) is not None else [1, 0]
         if tri:
             for base in bases:
@@ -396,6 +424,8 @@ class MicroStationBackend(DgnBackend):
             pts = [pts[int(i * step)] for i in range(self.MAX_VERTICES - 2)] + [pts[-1]]
         if closed:
             pts = pts + [pts[0]]
+        if DPoint3dArray is None:
+            return [self._pt(p) for p in pts]
         arr = DPoint3dArray()
         for p in pts:
             arr.append(self._pt(p))
@@ -410,6 +440,8 @@ class MicroStationBackend(DgnBackend):
         reasons = []
         eeh = EditElementHandle()
         try:
+            if (ShapeHandler if closed else LineStringHandler) is None:
+                raise BackendError("handler class not available")
             if closed:
                 st = ShapeHandler.CreateShapeElement(eeh, None, arr, True, self.model_ref)
             else:
