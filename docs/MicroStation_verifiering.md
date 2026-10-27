@@ -1,0 +1,39 @@
+# Det som måste verifieras inuti MicroStation
+
+Utvecklingsmiljön för det här repot är en Linux-container **utan MicroStation**. Se `docs/evidence/environment_report_linux_container.json`: Python-modulerna `MSPy*` finns inte. Därför gäller följande:
+
+* **Ingen DGN och ingen IFC har genererats med MicroStation.** Filerna i `output/` skapas först när skripten körs i MicroStation.
+* Allt som inte kräver MicroStation har körts och testats här (51 automatiska tester, se README): LandXML-läsning, spårgeometri, designmodell, Item Type-värden, orkestreringen av byggskriptet (inspelande backend), SchemaMapping-byggaren, efterbearbetningen och IDS-valideringen (på en *simulerad* export).
+* Alla Bentley-API-anrop finns i `microstation/msapi.py`. Signaturerna är kontrollerade mot MicroStation Python API-referensen på developer.bentley.com och Bentleys officiella API-presentationer.
+
+## Verifieringslista
+
+Kör först `python load "<repo>\microstation\inspect_environment.py"`. Den skriver `output/environment_report.json` som besvarar V-01–V-05 automatiskt.
+
+| Id | Vad | Hur det verifieras | Förväntat | Om det avviker |
+|---|---|---|---|---|
+| V-01 | MicroStation-version, Python 3.12, `MS_PYTHON` | environment_report: `config_variables`, `python` | 2024/2025, Python 3.12 | Python-API:t kräver 2024 eller senare, IFC 4.3-exporten kräver 2025. |
+| V-02 | Enum-namnet för Item Type-egenskaper: `CustomProperty.Type` (Bentleys PDF) eller `Type1` (referenssidan) med medlemmarna `String`, `Boolean`, `Double`, `Integer` | environment_report: `api["CustomProperty.Type members"]` | En av dem finns | `msapi.property_type_enum()` provar båda och rapporterar `dir(CustomProperty)`. |
+| V-03 | Hur ett Item Type-bibliotek skapas: `ItemTypeLibrary.Create(name, dgnFile, False)` (Bentleys PDF 24) | Byggskriptet steg 7. environment_report: `api["MSPyDgnPlatform.ItemTypeLibrary"].members` | `Create` finns | `msapi.create_item_type_library()` faller tillbaka på konstruktorn. |
+| V-04 | Bentleys "IFC Classification" Item Type: bibliotekets och egenskapernas namn | environment_report: `bentley_ifc_classification_in_active_dgn` och `bentley_files` (IFC_Classes_Types.dgnlib/.xlsx) | Importerad i DGN:en (Item Types-dialogen > Import > IFC_Classes_Types.dgnlib), egenskaperna matchas mot kandidaterna i `config/object_mapping.yaml` | Lägg till de faktiska namnen i `*_property_candidates`/`library_name_candidates`. |
+| V-05 | GCS-nyckelnamn för SWEREF 99 18 00 | environment_report: `gcs_candidates` | Minst en giltig nyckel med EPSG 3011 | Ange rätt nyckel i `coordinate_system.bentley_gcs_keynames`, eller sätt GCS i dialogen. Byggskriptet provar även `BaseGCS.InitFromEPSGCode(3011)`. |
+| V-06 | `DgnBoxDetail.InitFromCenters`: baseX/baseY är hela måttet (inte halva) | Mät en sliper i MicroStation (Measure Distance). `validate_dgn.py` kontrollerar Item Type-värdena | 2,60 × 0,30 × 0,22 m | Halvera eller dubblera i `MicroStationBackend.add_box`. |
+| V-07 | **IFC-exportören och SchemaMapping-filen**: läser den en fil med bara `GlobalVariables` och `ProjectConfigurations`, eller krävs hela standardfilen? | Exportera med `export/SchemaMapping.json`, och kör därefter `build_schema_mapping.py --template output/env/<standardfil>` och exportera igen | Den sammanslagna filen fungerar alltid | Använd alltid den sammanslagna filen. |
+| V-08 | Vilken IFC-klass varje element faktiskt får | `python export/inspect_bentley_export.py` på exportfilen: `class_by_category`, `class_mismatches` | Inga proxys för klassade element när "IFC Classification" används | Efterbearbetningen klassar om, men rapportera avvikelsen. |
+| V-09 | Hur Item Types exporteras (Pset-namn och prefix, datatyper, IfcPropertySet eller IfcElementQuantity) | inspect_bentley_export: `property_set_names`, `property_value_types` | Item Type-namnet finns med i Pset-namnet | `export/ifc_common.item_type_of_pset` hanterar prefix med `:`, `.`, `__` och `/`. Andra mönster läggs till där. |
+| V-10 | Relationer som exportören själv skapar (aggregering, containment, grupper, klassificering, georeferering) | inspect_bentley_export: `relationships`, `spatial_tree`, `post_step_needed_for` | Dokumenteras | Efterbearbetningen kompletterar det som saknas. Resultatet registreras i `docs/IFC_relationer.md`. |
+| V-11 | Enhet: IfcSIUnit LENGTHUNIT METRE utan prefix (IDS #20) | inspect_bentley_export: `units` | METRE | Sätt masterenheten i seedfilen till meter och exportera igen. Efterbearbetningen skalar inte om. |
+| V-12 | Prestanda i full-läge (~3 500 element) | `output/model_report.json`: `timings_s` | Minuter, inte timmar | Kör `preview` för kontroll. Tidtagning finns per steg och per kategori. |
+| V-13 | Slutna polyface-nät | Byggloggen varnar om `IsClosedByEdgePairing()` är falsk | Inga varningar | Näten trianguleras och kontrolleras redan offline (`tests/test_design_model.py`). |
+| V-14 | `dgn.linear_solid_kind: ruled_sweep` (valfritt) | Byt i konfigurationen och bygg i preview | DgnRuledSweep-solider | Konstruktorn för `DgnRuledSweepDetail` finns inte i referensen. Standardvärdet `mesh` använder bara dokumenterade anrop. |
+| V-15 | Named groups (`NamedGroup.Create`/`AddMember`/`WriteToFile`) | Named Groups-dialogen: BU26_RP-N1 … BU26_BS-1 | 6 + 2 + 1 grupper | Fel loggas per grupp och byggnaden fortsätter. |
+| V-16 | Spara med key-in `FILEDESIGN` | Filens tidsstämpel | Sparad | Spara manuellt (File > Save). |
+
+## Vad som är känt och vad som är osäkert om exportören
+
+| Känt (Bentleys dokumentation) | Osäkert, avgörs av V-07 till V-11 |
+|---|---|
+| MicroStation 2025: File > Export > Exchange File Types > IFC, eller key-in `mdl load Bentley.Interchange.iTwinIFCExporter` och sedan `IFC ITWINEXPORT` (Technology Preview). | Om ett DGN-element med IFC Classification = IfcRailwayPart/IfcRailway blir ett spatialt element i trädet eller bara en produkt. |
+| I dialogen väljs IFC-version, utfil och Schema Mapping File. | Om Item Type-värden som `SpatialParent` kan ge relationer (det antas inte). |
+| Bentleys Item Type "IFC Classification" (IFC_Classes_Types.dgnlib) sätter version, klass och typ. Utan den blir objekten proxys (OpenRail/OpenRoads-hjälpen). | Exakt hur egenskaperna i "IFC Classification" heter. |
+| Kända delar av SchemaMapping-formatet: `GlobalVariables` (ProcessEmptyProperties, JoinAssemblies, ConstructionElements, ProcessGroupingElements), `ProjectConfigurations`, `{"Class": ["IFCDynamic", "<Ifc>", "<Ifc>"]}`, kommentarer `/* */`. | Namnet på listan med klassmappningar och formatet för egenskapsmappningar (finns i standardfilen som levereras med exportören). |

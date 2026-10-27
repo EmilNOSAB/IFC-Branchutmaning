@@ -1,0 +1,10 @@
+# Offline tools (export/, validation/, tests/, tools/) - NOT needed by the
+# scripts in microstation/, which run in MicroStation's bundled Python 3.12.
+ifcopenshell>=0.8
+ifctester>=0.8
+pystache
+numpy
+pyyaml        # optional; common/miniyaml.py is used when PyYAML is missing
+pytest
+matplotlib    # tools/plot_design_model.py only
+pyproj        # optional, tests compare the SWEREF99 conversion with stored pyproj values
