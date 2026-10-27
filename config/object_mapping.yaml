@@ -24,6 +24,10 @@ bentley_ifc_classification:
   class_property_candidates: [Class, IFC Class, IfcClass, Entity]
   type_property_candidates: [Type, IFC Type, IfcType, PredefinedType, Predefined Type]
   version_value: IFC4X3_ADD2
+  # Only elements of these IFC classes get the Bentley Item Type.  Carriers of
+  # IfcProject/IfcSite/IfcBuiltSystem do not: the exporter creates project and
+  # site itself and IfcBuiltSystem (an IfcGroup) has no geometry.
+  apply_to_entities: [IfcRail, IfcTrackElement, IfcCourse, IfcElementAssembly, IfcRailwayPart, IfcRailway, IfcSpatialZone, IfcAlignment]
 
 classification_systems:
   CoClass_BV: {name: CoClass_BV, source: CoClass, edition: "2.0", description: CoClass Byggnadsverk}
