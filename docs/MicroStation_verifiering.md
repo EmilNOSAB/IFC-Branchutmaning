@@ -28,6 +28,7 @@ Kör först `python load "<repo>\microstation\inspect_environment.py"`. Den skri
 | V-14 | `dgn.linear_solid_kind: ruled_sweep` (valfritt) | Byt i konfigurationen och bygg i preview | DgnRuledSweep-solider | Konstruktorn för `DgnRuledSweepDetail` finns inte i referensen. Standardvärdet `mesh` använder bara dokumenterade anrop. |
 | V-15 | Named groups (`NamedGroup.Create`/`AddMember`/`WriteToFile`) | Named Groups-dialogen: BU26_RP-N1 … BU26_BS-1 | 6 + 2 + 1 grupper | Fel loggas per grupp och byggnaden fortsätter. |
 | V-16 | Spara med key-in `FILEDESIGN` | Filens tidsstämpel | Sparad | Spara manuellt (File > Save). |
+| V-17 | Konstruktorerna `ElementPropertiesSetter()`, `EditElementHandle()` / `EditElementHandle(elementRef)` (Bentleys PDF 06 och 24), `NamedGroupFlags()`, `NamedGroupMemberFlags()`, `ECValue()`, `DPoint3d(x, y, z)`, `DVec3d(x, y, z)` | Byggskriptet i preview-läge utan fel i `errors` | Inga fel | Konstruktorerna listas inte på referenssidorna men används i Bentleys exempel. Ett fel visar exakt vilket anrop som behöver justeras i `msapi.py`. |
 
 ## Vad som är känt och vad som är osäkert om exportören
 

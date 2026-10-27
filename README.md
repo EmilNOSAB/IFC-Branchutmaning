@@ -111,7 +111,7 @@ python validation\validate_ifc.py
 
 ## Begränsningar
 
-* Inget av MicroStation-stegen har körts här (se status ovan och verifieringslistan V-01–V-16).
+* Inget av MicroStation-stegen har körts här (se status ovan och verifieringslistan V-01–V-17).
 * Exportörens hantering av spatiala klasser, Item Types och relationer är inte känd i förväg. `inspect_bentley_export.py` mäter den och efterbearbetningen kompletterar.
 * Växelns komponenter är konstruktivt förenklade (tungor som avsmalnande profiler, korsning som kil). Förbindelsens fiktiva geometri (anslutning i vinkel mot S, höjdsprång 0,228 m) hanteras som beskrivet i konfliktdokumentet.
 * Civila alignment-objekt (OpenRail) skapas inte. I DGN:en finns linjeföringarna som 3D-linjesträngar med metadata, och i IFC som IfcAlignment med full semantik från LandXML.
