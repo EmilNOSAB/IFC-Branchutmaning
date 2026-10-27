@@ -79,14 +79,29 @@ def get_config_variable(name: str) -> str:
     return str(w) if _ok(st) else ""
 
 
-def property_type_enum():
-    """CustomProperty.Type (Bentley pdf/24 uses ``CustomProperty.Type.String``; the
-    reference page names the enum ``CustomProperty.Type1``).  VERIFY-IN-MS."""
-    for name in ("Type", "Type1"):
-        enum = getattr(CustomProperty, name, None)
-        if enum is not None and hasattr(enum, "String"):
-            return enum
-    raise BackendError("CustomProperty type enum not found; dir(CustomProperty)=%s" % dir(CustomProperty))
+def property_types() -> Dict[str, Any]:
+    """Item Type property types {'String': value, 'Boolean': ..., 'Double': ..., 'Integer': ...}.
+
+    Bentley pdf/24 writes ``CustomProperty.Type.String``; the installed
+    MicroStation 2025 binding exposes the members with the pybind prefix
+    ``e`` (``eString``, ``eBoolean``, ``eDouble``, ``eInteger``), both on the
+    enum (``CustomProperty.Type``/``Type1``) and directly on ``CustomProperty``
+    (verified in MicroStation, see docs/MicroStation_verifiering.md V-02)."""
+    holders = [getattr(CustomProperty, n, None) for n in ("Type", "Type1")] + [CustomProperty]
+    out: Dict[str, Any] = {}
+    for kind in ("String", "Boolean", "Double", "Integer"):
+        for holder in holders:
+            if holder is None:
+                continue
+            value = getattr(holder, "e" + kind, None)
+            if value is None:
+                value = getattr(holder, kind, None)
+            if value is not None:
+                out[kind] = value
+                break
+        if kind not in out:
+            raise BackendError("Item Type property type %s not found; dir(CustomProperty)=%s" % (kind, dir(CustomProperty)))
+    return out
 
 
 def create_item_type_library(name: str, dgn_file):
@@ -226,7 +241,7 @@ class MicroStationBackend(DgnBackend):
 
     # -------------------------------------------------------------- item types
     def ensure_item_types(self, library: str, spec: Dict[str, Sequence[Tuple[str, str]]]) -> Dict[str, Any]:
-        ptype = property_type_enum()
+        ptype = property_types()
         self._ptype = ptype
         lib = ItemTypeLibrary.FindByName(library, self.dgn_file)
         created = lib is None
@@ -242,7 +257,7 @@ class MicroStationBackend(DgnBackend):
                 prop = it.GetPropertyByName(pname)
                 if prop is None:
                     prop = it.AddProperty(pname, False)
-                    if not prop.SetType(getattr(ptype, ptype_name)):
+                    if not prop.SetType(ptype[ptype_name]):
                         raise BackendError("SetType(%s) failed for %s.%s" % (ptype_name, it_name, pname))
         st = lib.Write()
         lib = ItemTypeLibrary.FindByName(library, self.dgn_file)
