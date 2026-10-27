@@ -1,0 +1,196 @@
+# Object classification used by the build script (NOT a Bentley file).
+#
+# For every DGN object category this file defines the DGN level, the IFC entity
+# and PredefinedType written to the Item Types, CoClass references and the
+# property/quantity sets.  export/SchemaMapping.json is the separate,
+# Bentley-format file used by MicroStation's IFC exporter.
+#
+# Name/description templates may use {id}, {part}, {track}, {side}, {seq},
+# {position}, {turnout} and {alignment}.
+
+item_type_library: BU2026_IFC
+
+# Bentley's delivered "IFC Classification" Item Type (IFC_Classes_Types.dgnlib).
+# The script imports the library into the DGN and fills the three properties.
+# Property names are matched case-insensitively against the candidates below
+# (verify with microstation/inspect_environment.py).
+bentley_ifc_classification:
+  enabled: true
+  dgnlib_file: IFC_Classes_Types.dgnlib
+  dgnlib_search_config_variables: [MS_DGNLIBLIST_ITEMTYPES, MS_DGNLIBLIST, _USTN_INSTALLED_DGNLIBS]
+  library_name_candidates: [IFC Classification, IFC_Classes_Types, IFCClassification]
+  item_type_candidates: [IFC Classification, IFCClassification, IfcClassification]
+  version_property_candidates: [Version, IFC Version, IfcVersion, Schema]
+  class_property_candidates: [Class, IFC Class, IfcClass, Entity]
+  type_property_candidates: [Type, IFC Type, IfcType, PredefinedType, Predefined Type]
+  version_value: IFC4X3_ADD2
+
+classification_systems:
+  CoClass_BV: {name: CoClass_BV, source: CoClass, edition: "2.0", description: CoClass Byggnadsverk}
+  CoClass_KS: {name: CoClass_KS, source: CoClass, edition: "2.0", description: CoClass Konstruktiva system}
+  CoClass_FS: {name: CoClass_FS, source: CoClass, edition: "2.0", description: CoClass Funktionella system}
+  CoClass_KO: {name: CoClass_KO, source: CoClass, edition: "2.0", description: CoClass Komponenter}
+  CoClass_PR: {name: CoClass_PR, source: CoClass, edition: "2.0", description: CoClass Produktionsresultat}
+
+categories:
+  RAIL_MAIN:
+    level: BU26_RAIL_MAIN
+    ifc_entity: IfcRail
+    predefined_type: RAIL
+    name: "Räl {track} {side} {seq}"
+    description: "{position}"
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  RAIL_TURNOUT:
+    level: BU26_RAIL_MAIN
+    ifc_entity: IfcRail
+    predefined_type: RAIL
+    name: "Genomgående räl {turnout} {side} {seq}"
+    description: "{position}"
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  RAIL_STOCK:
+    level: BU26_RAIL_STOCK
+    ifc_entity: IfcRail
+    predefined_type: STOCKRAIL
+    name: "Stödräl {turnout} {side}"
+    description: Stödräl i tungpartiet
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  RAIL_BLADE:
+    level: BU26_RAIL_STOCK
+    ifc_entity: IfcRail
+    predefined_type: BLADE
+    name: "Tunga {turnout} {side}"
+    description: Växeltunga
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  RAIL_CHECK:
+    level: BU26_RAIL_CHECK
+    ifc_entity: IfcRail
+    predefined_type: CHECKRAIL
+    name: "Moträl {turnout} {side}"
+    description: Moträl vid korsning
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  FROG:
+    level: BU26_FROG
+    ifc_entity: IfcTrackElement
+    predefined_type: FROG
+    name: "Korsning {turnout}"
+    description: Korsningsspets (förenklad)
+    classifications: [[CoClass_KO, WRA20, Räl]]
+    spatial_relation: contained
+  SLEEPER:
+    level: BU26_SLEEPER
+    ifc_entity: IfcTrackElement
+    predefined_type: SLEEPER
+    name: "Sliper {part} {seq}"
+    description: Betongsliper
+    classifications: [[CoClass_KO, ULE14, Sliper]]
+    spatial_relation: contained
+    quantity_set: Qto_SleeperBaseQuantities
+  SLEEPER_TURNOUT:
+    level: BU26_SLEEPER_TURNOUT
+    ifc_entity: IfcTrackElement
+    predefined_type: SLEEPER
+    name: "Växelsliper {part} {seq}"
+    description: Växelsliper (betong)
+    classifications: [[CoClass_KO, ULE14, Sliper]]
+    spatial_relation: contained
+    quantity_set: Qto_SleeperBaseQuantities
+  BALLAST:
+    level: BU26_BALLAST
+    ifc_entity: IfcCourse
+    predefined_type: BALLASTBED
+    name: "Ballast {part}"
+    description: Makadamballast
+    classifications: [[CoClass_KO, UTA10, Fyllning], [CoClass_PR, CEB.3, Fyllning för spåranläggning]]
+    spatial_relation: contained
+    quantity_set: Qto_CourseBaseQuantities
+  SWITCH_ASSEMBLY:
+    level: BU26_SWITCH_ASSEMBLY
+    ifc_entity: IfcElementAssembly
+    predefined_type: TRACTION_SWITCHING_ASSEMBLY
+    name: "Omläggningsanordning {turnout}"
+    description: Växeldriv med drivstång
+    classifications: [[CoClass_KO, QSB, Spårväxel]]
+    spatial_relation: aggregated
+  ALIGNMENT:
+    level: BU26_ALIGNMENT
+    ifc_entity: IfcAlignment
+    predefined_type: USERDEFINED
+    name: "{alignment}"
+    classifications: []
+    spatial_relation: referenced
+  SPATIAL_PROJECT:
+    level: BU26_SPATIAL
+    ifc_entity: IfcProject
+    classifications: []
+  SPATIAL_SITE:
+    level: BU26_SPATIAL
+    ifc_entity: IfcSite
+    classifications: []
+  SPATIAL_RAILWAY:
+    level: BU26_SPATIAL
+    ifc_entity: IfcRailway
+    predefined_type: USERDEFINED
+    classifications: [[CoClass_BV, CAE, Spårväg]]
+  SPATIAL_RAILWAYPART_PLAIN:
+    level: BU26_SPATIAL
+    ifc_entity: IfcRailwayPart
+    predefined_type: PLAINTRACK
+    classifications: [[CoClass_KS, DA10, Ballasterat spårsystem]]
+  SPATIAL_RAILWAYPART_TURNOUT:
+    level: BU26_SPATIAL
+    ifc_entity: IfcRailwayPart
+    predefined_type: TURNOUTTRACK
+    classifications: [[CoClass_KS, DA20, Ballasterat spårväxelsystem]]
+  SPATIAL_ZONE:
+    level: BU26_SPATIAL
+    ifc_entity: IfcSpatialZone
+    classifications: []
+  BUILT_SYSTEM:
+    level: BU26_SPATIAL
+    ifc_entity: IfcBuiltSystem
+    predefined_type: RAILWAYTRACK
+    classifications: [[CoClass_FS, R, Spårsystem]]
+
+# IFC data types for property/quantity sets (used by the post-processing step
+# to type values correctly and by validate_dgn.py to check item type values).
+property_sets:
+  Pset_RailwayTrackStructurePart:
+    HasBallastTrack: IfcBoolean
+    HasCWR: IfcBoolean
+    IsSunExposed: IfcBoolean
+    TrackSupportingStructure: IfcLabel
+  Pset_BuiltSystemRailwayTrack:
+    TrackID: IfcIdentifier
+    TrackNumber: IfcIdentifier
+    TrackUsage: IfcLabel
+    TrackCharacteristic: IfcLabel
+  Pset_ElementAssemblyTypeTractionSwitchingAssembly:
+    RatedVoltage: IfcElectricVoltageMeasure
+    NominalPower: IfcPowerMeasure
+  Pset_SpaceCommon:
+    GrossPlannedArea: IfcAreaMeasure
+  Pset_CourseCommon:
+    NominalLength: IfcPositiveLengthMeasure
+    NominalThickness: IfcPositiveLengthMeasure
+    NominalWidth: IfcPositiveLengthMeasure
+  Pset_TrackElementOccurrenceSleeper:
+    HasSpecialEquipment: IfcBoolean
+    IsContaminatedSleeper: IfcBoolean
+
+quantity_sets:
+  Qto_CourseBaseQuantities:
+    Length: IfcQuantityLength
+    Width: IfcQuantityLength
+    Thickness: IfcQuantityLength
+    Volume: IfcQuantityVolume
+    GrossVolume: IfcQuantityVolume
+    Weight: IfcQuantityWeight
+  Qto_SleeperBaseQuantities:
+    Length: IfcQuantityLength
+    Width: IfcQuantityLength
+    Height: IfcQuantityLength

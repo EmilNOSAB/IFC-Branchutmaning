@@ -1,0 +1,51 @@
+# DGN level structure and symbology.
+# Levels support administration and visual control only - IFC classification
+# never depends on the level name (it comes from the Item Types).
+# color: MicroStation colour table index (0-255), weight: 0-31.
+
+levels:
+  BU26_ALIGNMENT:
+    description: Spårmittlinjer från LandXML (3D)
+    color: 3
+    weight: 2
+  BU26_RAIL_MAIN:
+    description: Räler (IfcRail RAIL)
+    color: 0
+    weight: 1
+  BU26_RAIL_STOCK:
+    description: Stödräler och tungor (IfcRail STOCKRAIL/BLADE)
+    color: 4
+    weight: 1
+  BU26_RAIL_CHECK:
+    description: Moträler (IfcRail CHECKRAIL)
+    color: 6
+    weight: 1
+  BU26_FROG:
+    description: Korsningar (IfcTrackElement FROG)
+    color: 5
+    weight: 1
+  BU26_SLEEPER:
+    description: Slipers spår (IfcTrackElement SLEEPER)
+    color: 9
+    weight: 0
+  BU26_SLEEPER_TURNOUT:
+    description: Växelslipers (IfcTrackElement SLEEPER)
+    color: 12
+    weight: 0
+  BU26_BALLAST:
+    description: Ballast (IfcCourse BALLASTBED)
+    color: 98
+    weight: 0
+  BU26_SWITCH_ASSEMBLY:
+    description: Omläggningsanordning (IfcElementAssembly)
+    color: 1
+    weight: 1
+  BU26_SPATIAL:
+    description: Bärare för rumslig struktur (Project/Site/Railway/RailwayPart/BuiltSystem/SpatialZone)
+    color: 7
+    weight: 0
+    display: false
+  BU26_REFERENCE:
+    description: Referens- och kontrollgeometri
+    color: 2
+    weight: 0

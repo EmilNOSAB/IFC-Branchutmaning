@@ -1,0 +1,1135 @@
+<ids:ids xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://standards.buildingsmart.org/IDS http://standards.buildingsmart.org/IDS/1.0/ids.xsd" xmlns:ids="http://standards.buildingsmart.org/IDS">
+  <!--Edited with usBIM.IDSeditor 2.4.8 (http://www.accasoftware.com)-->
+  <ids:info>
+    <ids:title>BranschUtmaning 2026</ids:title>
+    <ids:copyright>© 2026 BIM Alliance</ids:copyright>
+    <ids:version>1.0</ids:version>
+    <ids:description>Denna IDS kontrollerar inkommna IFC-filer och säkerställer att datakraven uppfylls enligt IFC-standarden för järnvägsprojekt</ids:description>
+    <ids:author>info@bimalliance.se</ids:author>
+    <ids:date>2026-07-01</ids:date>
+    <ids:purpose>Kvalitetssäkring av IFC-leveranser inom järnvägssektorn genom automatiserad validering mot IDS-krav</ids:purpose>
+  </ids:info>
+  <ids:specifications>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#1 IfcProject standard attribut" identifier="IfcProject" description="Säkerställer att modellens rotobjekt IfcProject finns och bär korrekt ifyllda standardattribut. Name är obligatoriskt enligt schemats WHERE-regel HasName och anger projektets kortnamn/projektnummer. LongName anger fullständig projektbenämning och Phase anger aktuellt skede. Endast en IfcProject får förekomma per fil (IfcSingleProjectInstance)." instructions="Ange Name = projektnummer &quot;KG55&quot;. Sätt LongName = &quot;Kistagrenen&quot;. Sätt Phase till &quot;Branschutmaning 2026&quot;.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCPROJECT</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="required" instructions="GlobalId ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="LongName ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>LongName</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Phase ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>Phase</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#2 IfcSite standard attribut" identifier="IfcSite">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCSITE</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELAGGREGATES" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCPROJECT</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+        <ids:attribute cardinality="required" instructions="GlobalId ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="LongName ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>LongName</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Description ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="RefLatitude ska finnas definierad med värde">
+          <ids:name>
+            <ids:simpleValue>RefLatitude</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="RefLongitude ska finnas definierad med värde">
+          <ids:name>
+            <ids:simpleValue>RefLongitude</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="RefElevation ska finnas definierad med värde">
+          <ids:name>
+            <ids:simpleValue>RefElevation</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:property dataType="IFCAREAMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_SpaceCommon</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>GrossPlannedArea</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#3 IfcSpatialZone standard attribut inklusive predefinedType" identifier="ifcSpatialZone" description="Säkerställer att icke-hierarkiska rumsliga grupperingar (t.ex. Delområde, Entreprenad) modelleras som IfcSpatialZone med korrekt ifyllda standardattribut. PredefinedType anger zonens typ. Eftersom inget standardvärde i IfcSpatialZoneTypeEnum motsvarar svenska grupperingar används USERDEFINED, vilket enligt schemats WHERE-regel kräver att ObjectType anges. Fysiska element knyts till zonen via IfcRelReferencedInSpatialStructure (icke-hierarkiskt), inte via IfcRelContainedInSpatialStructure." instructions="Sätt PredefinedType = USERDEFINED och ange ObjectType = grupperingstyp (t.ex. &quot;Delområde KG86&quot; eller &quot;Entreprenad KG88&quot; ). Name = beteckning/nummer, LongName = klartextnamn.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCSPATIALZONE</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="required" instructions="GlobalId ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="LongName ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>LongName</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Description ska finnas definerad">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="PredefinedType definerad">
+          <ids:name>
+            <ids:simpleValue>PredefinedType</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#4 IfcAligment standard attribut inklusive PredefinedType" identifier="ifcAligment" description="Säkerställer att linjeföringen IfcAlignment bär korrekt ifyllda standardattribut och geometrisk representation. Name identifierar linjen (t.ex. spårnamn eller väglinje). IfcAlignment ingår inte i den rumsliga hierarkin utan aggregeras direkt till IfcProject (IfcRelAggregates) och refereras till spatiala element via IfcRelReferencedInSpatialStructure." instructions="Ange Name = entydig linjebeteckning. PredefinedType har bara USERDEFINED/NOTDEFINED; använd USERDEFINED + ObjectType om en typbeteckning krävs (t.ex. &quot;Spårcentrumlinje&quot;). Linjens geometri (horisontal/vertikal/eventuell cant) ska finnas som Representation. Längdmått för element som placeras på linjen anges i meter (km 12.340 → 12340.0 m).">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCALIGNMENT</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="required" instructions="GlobalId">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Description">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="PredefinedType">
+          <ids:name>
+            <ids:simpleValue>PredefinedType</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="optional">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_Stationing</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Station</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCBOOLEAN" cardinality="optional">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_Stationing</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>HasIncreasingStation</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#5 IfcRailway standard attribut inklusive PredefinedType och ObjectType" identifier="ifcRailway" description="Säkerställer att järnvägsanläggningen IfcRailway bär korrekt ifyllda standardattribut. Eftersom IfcRailwayTypeEnum endast innehåller USERDEFINED och NOTDEFINED kan PredefinedType inte bära någon semantisk typ – typbeteckningen anges därför som fritext i ObjectType med PredefinedType = USERDEFINED. PredefinedType kräver att ObjectType är ifyllt när PredefinedType = USERDEFINED. Name anger anläggningens bandel och LongName dess fullständiga benämning. Komplettera med Description för längre beskrivning" instructions="Sätt PredefinedType = USERDEFINED och ange ObjectType = typbeteckning för järnvägen (t.ex. &quot;Järnväg&quot; eller den klassning ni använder). Lämna inte ObjectType tomt – det bryter mot WHERE-regeln. Ange Name = kortnamn/nummer och LongName = fullständig benämning. För formell klassning (CoClass/BSAB), använd IfcClassificationReference i stället för att överlasta ObjectType.  Ett konkret exempel gör det tydligt i praktiken: PredefinedType = USERDEFINED, ObjectType = &quot;Järnväg&quot; (eller mer specifikt, t.ex. en bantyp ni använder). ">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAILWAY</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELAGGREGATES" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCSITE</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required" instructions="CoClass klassificering för byggnadsverk">
+          <ids:value>
+            <ids:simpleValue>CAE</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_BV</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:attribute cardinality="required" instructions="GlobalId">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Description">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name">
+          <ids:name>
+            <ids:simpleValue>PredefinedType</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>USERDEFINED</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="ObjectType = &quot;Järnväg&quot; (eller mer specifikt, t.ex. en bantyp ni använder). Det är detta par en kontroll mot WHERE-regeln säkerställer.&#xA;">
+          <ids:name>
+            <ids:simpleValue>ObjectType</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="LongName ska vara definierad">
+          <ids:name>
+            <ids:simpleValue>LongName</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#6 IfcRailwayPart.PLAINTRACK med standard attribut och PredefinedType">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>PLAINTRACK</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCBUILTSYSTEM</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>RAILWAYTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:partOf relation="IFCRELAGGREGATES" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAY</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required" instructions="CoClass klassificering för konstruktiv system">
+          <ids:value>
+            <ids:simpleValue>DA10</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KS</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:attribute cardinality="required" instructions="GlobalId ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>GlobalId</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="OwnerHistory ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>OwnerHistory</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Name ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:attribute cardinality="required" instructions="Description ska finnas definierad">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>HasBallastTrack</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>HasCWR</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>IsSunExposed</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCLABEL" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>TrackSupportingStructure</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>SUBGRADELAYER</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#7 IfcRail.RAIL">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>PLAINTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>innerräl</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#8 IfcRailwayPart.TURNOUTTRACK">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELAGGREGATES" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAY</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+        <ids:partOf relation="IFCRELASSIGNSTOGROUP" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCBUILTSYSTEM</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>RAILWAYTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required" instructions="CoClass klassificering för konstruktiv system">
+          <ids:value>
+            <ids:simpleValue>DA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KS</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>HasBallastTrack</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>HasCWR</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCBOOLEAN" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>IsSunExposed</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>true</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCLABEL" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_RailwayTrackStructurePart</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>TrackSupportingStructure</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>SUBGRADELAYER</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#9 IfcTrackElement.SLEEPER">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCTRACKELEMENT</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>SLEEPER</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>PLAINTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>ULE14</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#10 IfcRail.RAIL">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#11 IfcElementAssembly.TRACTION_SWITCHING_ASSEMBLY">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCELEMENTASSEMBLY</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>TRACTION_SWITCHING_ASSEMBLY</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCELEMENTASSEMBLY</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>TRACTION_SWITCHING_ASSEMBLY</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELAGGREGATES" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>QSB</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:property dataType="IFCELECTRICVOLTAGEMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_ElementAssemblyTypeTractionSwitchingAssembly</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>RatedVoltage</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCPOWERMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_ElementAssemblyTypeTractionSwitchingAssembly</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>NominalPower</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#12 IfcRail.STOCKRAIL">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>STOCKRAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>STOCKRAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#13 IfcRail.CHECKRAIL">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>CHECKRAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>CHECKRAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#14 IfcTrackElement.FROG">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCTRACKELEMENT</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>FROG</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCTRACKELEMENT</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>FROG</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#15 IfcBuiltSystem.RAILWAYTRACK" instructions="Gruppera de olika räl segment till ett byggt system med typ RAILWAYTRACK. Set som namn &quot;Tvärbanan&quot; och longName &quot;Norra Ulvsunda-Ursviks torg&quot;. Lägg till ett Pset_BuiltSystemRailwayTrack med TrackCharacteristic =NORMAL, TrackUsage = MAINTRACK, TrackNumber = 5930">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCBUILTSYSTEM</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAILWAYTRACK</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCBUILTSYSTEM</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAILWAYTRACK</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:classification cardinality="required" instructions="CoClass klassificering för Funktionellt System">
+          <ids:value>
+            <ids:simpleValue>R</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_FS</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>LongName</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>Polarexpress</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>Tvärbanan</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+        <ids:property dataType="IFCLABEL" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_BuiltSystemRailwayTrack</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>TrackCharacteristic</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>NORMAL</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCIDENTIFIER" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_BuiltSystemRailwayTrack</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>TrackNumber</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>5930</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+        <ids:property dataType="IFCLABEL" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Pset_BuiltSystemRailwayTrack</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>TrackUsage</ids:simpleValue>
+          </ids:baseName>
+          <ids:value>
+            <ids:simpleValue>MAINTRACK</ids:simpleValue>
+          </ids:value>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#16 IfcRail.RAIL">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCRAIL</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>RAIL</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>PLAINTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>WRA20</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>ytterräl</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#17 IfcTrackElement.SLEEPER">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCTRACKELEMENT</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>SLEEPER</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+            <ids:predefinedType>
+              <ids:simpleValue>TURNOUTTRACK</ids:simpleValue>
+            </ids:predefinedType>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required">
+          <ids:value>
+            <ids:simpleValue>ULE14</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#18 Qto_CourseBaseQuantities basmängder ">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCCOURSE</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>BALLASTBED</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:property dataType="IFCVOLUMEMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>GrossVolume</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Length</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Thickness</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCVOLUMEMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Volume</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCMASSMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Weight</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_CourseBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Width</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#19 Qto_SleeperBaseQuantities basmängder ">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCTRACKELEMENT</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>SLEEPER</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_SleeperBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Height</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_SleeperBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Length</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+        <ids:property dataType="IFCLENGTHMEASURE" cardinality="required">
+          <ids:propertySet>
+            <ids:simpleValue>Qto_SleeperBaseQuantities</ids:simpleValue>
+          </ids:propertySet>
+          <ids:baseName>
+            <ids:simpleValue>Width</ids:simpleValue>
+          </ids:baseName>
+        </ids:property>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#20 IfcSIUnit " instructions="Units ska vara i meter, det betyder inget värde på attribut &quot;Prefix&quot;">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCSIUNIT</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+        <ids:attribute>
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>METRE</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+        <ids:attribute>
+          <ids:name>
+            <ids:simpleValue>UnitType</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>LENGTHUNIT</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="prohibited">
+          <ids:name>
+            <ids:simpleValue>Prefix</ids:simpleValue>
+          </ids:name>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#21 IfcProjectedCRS" instructions="Modellen ska ligga i &quot;SWEREF 99 18 00 + RH 2000&quot; enligt exempel från PRAXI. Man kan antingen sätta båda på en gång eller definiera horisontella och vertikala systemet separat.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCPROJECTEDCRS</ids:simpleValue>
+          </ids:name>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>Name</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="EPSG:5850" />
+              <xs:enumeration value="EPSG:3011" />
+            </xs:restriction>
+          </ids:value>
+        </ids:attribute>
+        <ids:attribute cardinality="required">
+          <ids:name>
+            <ids:simpleValue>Description</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="SWEREF 99 18 00 + RH 2000" />
+              <xs:enumeration value="SWEREF 99 18 00" />
+            </xs:restriction>
+          </ids:value>
+        </ids:attribute>
+        <ids:attribute cardinality="optional">
+          <ids:name>
+            <ids:simpleValue>VerticalDatum</ids:simpleValue>
+          </ids:name>
+          <ids:value>
+            <ids:simpleValue>RH 2000</ids:simpleValue>
+          </ids:value>
+        </ids:attribute>
+      </ids:requirements>
+    </ids:specification>
+    <ids:specification ifcVersion="IFC4X3_ADD2" name="#22 IfcCourse" instructions="Ballasten ska ha två klassificeringar en för produktionsresultatet &quot;Fyllning för spåranläggning&quot; med koden &quot;CEB.3&quot; och en för CoClass komponenten &quot;Fyllning&quot; med koden &quot;UTA10&quot;.">
+      <ids:applicability minOccurs="1" maxOccurs="unbounded">
+        <ids:entity>
+          <ids:name>
+            <ids:simpleValue>IFCCOURSE</ids:simpleValue>
+          </ids:name>
+          <ids:predefinedType>
+            <ids:simpleValue>BALLASTBED</ids:simpleValue>
+          </ids:predefinedType>
+        </ids:entity>
+      </ids:applicability>
+      <ids:requirements>
+        <ids:partOf relation="IFCRELCONTAINEDINSPATIALSTRUCTURE" cardinality="required">
+          <ids:entity>
+            <ids:name>
+              <ids:simpleValue>IFCRAILWAYPART</ids:simpleValue>
+            </ids:name>
+          </ids:entity>
+        </ids:partOf>
+        <ids:classification cardinality="required" instructions="CoClass Produktionsresultat (samma som BSABwr kod)">
+          <ids:value>
+            <ids:simpleValue>CEB.3</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <xs:restriction base="xs:string">
+              <xs:enumeration value="CoClass_PR" />
+              <xs:enumeration value="BSAB96_PR" />
+            </xs:restriction>
+          </ids:system>
+        </ids:classification>
+        <ids:classification cardinality="required" instructions="CoClass Komponent">
+          <ids:value>
+            <ids:simpleValue>UTA10</ids:simpleValue>
+          </ids:value>
+          <ids:system>
+            <ids:simpleValue>CoClass_KO</ids:simpleValue>
+          </ids:system>
+        </ids:classification>
+      </ids:requirements>
+    </ids:specification>
+  </ids:specifications>
+</ids:ids>

@@ -1,0 +1,305 @@
+# Branschutmaningen 2026 - modellkonfiguration
+#
+# All paths are relative to the repository root unless absolute.
+# This file is read by the pure-Python design model (geometry/, model/) and by
+# the MicroStation build script (microstation/build_railway_dgn.py).
+# Keep to plain YAML (mappings, lists, scalars): MicroStation's bundled Python
+# has no PyYAML, so common/miniyaml.py parses this file there.
+
+files:
+  landxml: input/Branschutmaningen_2026_Spårgeometrier_fiktiv_med_vxl.xml
+  ids: input/Branschutmaningen_2026.ids
+  # Seed DGN. Empty = use the MicroStation configuration variable named in
+  # seed_config_variable (MS_DESIGNSEED in a standard workspace).
+  dgn_seed: ""
+  seed_config_variable: MS_DESIGNSEED
+  dgn_output: output/Branschutmaningen_2026.dgn
+  model_name: Default
+  model_report: output/model_report.json
+  dgn_validation_report: output/dgn_validation_report.json
+  ifc_bentley_export: output/Branschutmaningen_2026_bentley_export.ifc
+  ifc_output: output/Branschutmaningen_2026.ifc
+  validation_report_html: output/validation_report.html
+  validation_report_json: output/validation_report.json
+  schema_mapping: export/SchemaMapping.json
+
+# preview | full  (can be overridden on the command line / key-in argument)
+mode: full
+
+modes:
+  preview:
+    max_step: 5.0              # m, max distance between sweep sections
+    max_chord_error: 0.05      # m
+    sleeper_every_n: 10        # place every n-th sleeper only
+    rail_profile: simple       # simple rectangle instead of 60E1 outline
+  full:
+    max_step: 2.0
+    max_chord_error: 0.005
+    sleeper_every_n: 1
+    rail_profile: 60E1
+
+# Detail level of the IFC export (passed to the export step / documentation)
+export_detail: full
+
+coordinate_system:
+  horizontal_name: SWEREF 99 18 00
+  vertical_name: RH 2000
+  epsg_horizontal: 3011
+  epsg_compound: 5850
+  ifc_crs_name: EPSG:3011
+  ifc_crs_description: SWEREF 99 18 00
+  ifc_vertical_datum: RH 2000
+  # Bentley GCS key names tried in order (verify with microstation/inspect_environment.py)
+  bentley_gcs_keynames: [SWEREF99-1800, SWEREF99/18-00, SWEREF99-18-00]
+  bentley_vertical_datum_key: ""
+  # Model origin used for IfcSite.RefLatitude/RefLongitude/RefElevation.
+  # "auto" = start point of the first main alignment.
+  site_reference_point: auto
+
+project:
+  name: BH55
+  long_name: Polarexpress
+  phase: Branschutmaningen 2026
+  description: Banöverbyggnad för dubbelspår med växelförbindelse - Branschutmaningen 2026
+  # IDS #1 instructions suggest KG55 / Kistagrenen / "Branschutmaning 2026" instead
+  # (see docs/IDS_och_underlag_konflikter.md, K-01).
+
+site:
+  name: KG55-OMR
+  long_name: Kistagrenen projektområde
+  description: Projektområde för spåranläggningen, SWEREF 99 18 00 / RH 2000
+  land_title_number: ""
+  # m2; "auto" = plan area of the ballast footprint of all railway parts
+  gross_planned_area: auto
+
+spatial_zone:
+  id: SZ-E1
+  name: E1
+  long_name: Entreprenad banöverbyggnad
+  description: Entreprenadområde för banöverbyggnad km 6+950 - 8+010
+  predefined_type: CONSTRUCTION
+  object_type: Entreprenad
+
+railway:
+  id: RW-1
+  name: KG55
+  long_name: Tvärbanan Kistagrenen
+  description: Spårväg - dubbelspår med växelförbindelse (banöverbyggnad)
+  object_type: Spårväg
+
+built_system:
+  id: BS-1
+  name: Tvärbanan
+  long_name: Polarexpress
+  description: Spårsystem som grupperar samtliga spårdelar
+  track_number: "5930"
+  track_usage: MAINTRACK
+  track_characteristic: NORMAL
+  track_id: "5930"
+
+alignments:
+  - key: N
+    landxml_name: Del 1 - NSpår
+    id: AL-N
+    name: Del 1 - NSpår
+    description: Spårmittlinje norra spåret (LandXML, SWEREF 99 18 00 / RH 2000)
+    object_type: Spårmittlinje
+    role: main
+  - key: S
+    landxml_name: Del 1 - SSpår
+    id: AL-S
+    name: Del 1 - SSpår
+    description: Spårmittlinje södra spåret (LandXML, SWEREF 99 18 00 / RH 2000)
+    object_type: Spårmittlinje
+    role: main
+  - key: V
+    landxml_name: Växel 1 - fiktiv förbindning
+    id: AL-V
+    name: Växel 1 - fiktiv förbindning
+    description: Spårmittlinje växelförbindelse N->S (LandXML, fiktiv)
+    object_type: Spårmittlinje
+    role: branch
+
+# vertical curve interpretation: length (default, see geometry/vertical_profile.py) | radius
+vertical_curve_mode: length
+
+# Branch (crossover) elevation at the connection to the other main track:
+#   landxml        - use the branch profile exactly as delivered (0.228 m step at the S-track end)
+#   adapt_to_main  - linear correction so that the branch meets both main tracks
+branch_profile: adapt_to_main
+
+# Railway parts. Station limits are computed from the turnouts unless
+# station_from / station_to are given explicitly (stations of the main track).
+railway_parts:
+  - key: N1
+    id: RP-N1
+    track: N
+    predefined_type: PLAINTRACK
+    name: N1
+    long_name: Norra spåret, km 6+950 - växel A
+    description: Ballasterat spår, norra spåret före växel A
+  - key: A
+    id: RP-VA
+    track: N
+    predefined_type: TURNOUTTRACK
+    turnout: VXL-A
+    name: VA
+    long_name: Växel A (norra spåret)
+    description: Ballasterat spårväxelsystem, avvikande mot södra spåret
+  - key: N2
+    id: RP-N2
+    track: N
+    predefined_type: PLAINTRACK
+    name: N2
+    long_name: Norra spåret, växel A - km 8+010
+    description: Ballasterat spår, norra spåret efter växel A
+  - key: S1
+    id: RP-S1
+    track: S
+    predefined_type: PLAINTRACK
+    name: S1
+    long_name: Södra spåret, km 6+950 - växel B
+    description: Ballasterat spår, södra spåret före växel B
+  - key: B
+    id: RP-VB
+    track: S
+    predefined_type: TURNOUTTRACK
+    turnout: VXL-B
+    name: VB
+    long_name: Växel B (södra spåret)
+    description: Ballasterat spårväxelsystem, anslutning från norra spåret
+  - key: S2
+    id: RP-S2
+    track: S
+    predefined_type: PLAINTRACK
+    name: S2
+    long_name: Södra spåret, växel B - km 8+006
+    description: Ballasterat spår, södra spåret efter växel B
+
+railway_part_usage_type: LONGITUDINAL
+
+track_structure_pset:
+  HasBallastTrack: true
+  HasCWR: true
+  IsSunExposed: true
+  TrackSupportingStructure: SUBGRADELAYER
+
+track:
+  # distance between rail head centres (1435 mm gauge + 65 mm head width)
+  rail_centre_distance: 1.5
+  gauge: 1.435
+  rail_pad_thickness: 0.010
+  # inner/outer rail ("innerräl"/"ytterräl") is decided per curve; rails are split
+  # at the midpoint of tangents between curves of opposite direction.
+  straight_rail_default: by_nearest_curve
+
+rail_profiles:
+  # u = lateral (m, + = towards the rail's field side is NOT used; profile is symmetric),
+  # v = height (m) relative to top of rail. Counter-clockwise outline.
+  60E1:
+    height: 0.172
+    outline:
+      - [-0.075, -0.172]
+      - [0.075, -0.172]
+      - [0.075, -0.160]
+      - [0.010, -0.150]
+      - [0.0083, -0.140]
+      - [0.0083, -0.055]
+      - [0.036, -0.045]
+      - [0.036, 0.0]
+      - [-0.036, 0.0]
+      - [-0.036, -0.045]
+      - [-0.0083, -0.055]
+      - [-0.0083, -0.140]
+      - [-0.010, -0.150]
+      - [-0.075, -0.160]
+  simple:
+    height: 0.172
+    outline:
+      - [-0.036, -0.172]
+      - [0.036, -0.172]
+      - [0.036, 0.0]
+      - [-0.036, 0.0]
+
+sleepers:
+  spacing: 0.60
+  first_offset: 0.30          # distance from part start to first sleeper centre
+  length: 2.60
+  width: 0.30
+  height: 0.22
+  material: Betong
+  type_name: Betongsliper JHT 2.6
+  turnout:
+    overhang: 0.55            # beyond outermost rail centre
+    max_length: 7.20          # longer sleepers are not created (branch gets its own)
+    crossover_common_sleepers: true
+
+ballast:
+  material: Makadam 32/63
+  density: 1700.0             # kg/m3 (bulk)
+  shoulder_width: 0.40        # överbredd beyond sleeper end (each side)
+  thickness_below_sleeper: 0.30
+  side_slope: 1.5             # horizontal per vertical
+  # Inner side towards the other main track is cut at the mid line when the
+  # tracks are closer than this distance (double track ballast bed).
+  double_track_split_distance: 8.0
+  # top width (överbredd) = sleeper length + 2*shoulder; bottom width (underbredd)
+  # follows from thickness and slope; both are reported in Qto_CourseBaseQuantities.
+
+turnouts:
+  - id: VXL-A
+    name: Växel A
+    main_track: N
+    branch: V
+    branch_end: start         # the branch alignment starts on the main track here
+    blade_length: 12.0
+    stock_rail_overhang: 2.0
+    frog_length: 4.5
+    frog_tail: 4.0
+    check_rail_length: 4.8
+    flangeway: 0.045
+    part_lead_in: 3.0         # part starts this far before the switch toe
+    point_machine:
+      length: 1.2
+      width: 0.45
+      height: 0.30
+      lateral_clearance: 0.9  # from rail centre on the non-branch side
+      drive_rod_width: 0.08
+      drive_rod_height: 0.05
+      rated_voltage: 400.0    # V
+      nominal_power: 1200.0   # W
+  - id: VXL-B
+    name: Växel B
+    main_track: S
+    branch: V
+    branch_end: end
+    blade_length: 12.0
+    stock_rail_overhang: 2.0
+    frog_length: 4.5
+    frog_tail: 4.0
+    check_rail_length: 4.8
+    flangeway: 0.045
+    part_lead_in: 3.0
+    point_machine:
+      length: 1.2
+      width: 0.45
+      height: 0.30
+      lateral_clearance: 0.9
+      drive_rod_width: 0.08
+      drive_rod_height: 0.05
+      rated_voltage: 400.0
+      nominal_power: 1200.0
+
+dgn:
+  # How swept linear solids (rails, ballast, check rails, frogs) are written:
+  #   mesh        - closed PolyfaceHeader (documented API, default)
+  #   ruled_sweep - DgnRuledSweep solid primitive (constructor must be verified in MicroStation)
+  linear_solid_kind: mesh
+  # Sleepers and point machines are DgnBox solid primitives.
+  create_alignment_elements: true
+  create_spatial_carriers: true
+  create_named_groups: true
+  # recreate: copy seed -> output and build from scratch
+  # purge: delete previously generated BU26 elements in the active model, then build
+  rebuild_strategy: purge
+  save_after_build: true
