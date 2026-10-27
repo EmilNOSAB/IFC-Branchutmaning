@@ -79,6 +79,8 @@ spatial_zone:
   description: Entreprenadområde för banöverbyggnad km 6+950 - 8+010
   predefined_type: CONSTRUCTION
   object_type: Entreprenad
+  # aggregate_project (as in the information model diagram) | aggregate_site
+  relation: aggregate_project
 
 railway:
   id: RW-1
