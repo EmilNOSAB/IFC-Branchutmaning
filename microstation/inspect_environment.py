@@ -113,14 +113,12 @@ def describe_ifc_classification_dgnlib(be, bic_cfg):
         if not path:
             return out
         src = be.open_dgn_readonly(path)
-        from MSPyDgnPlatform import ItemTypeLibrary
         libs = {}
-        for name in bic_cfg.get("library_name_candidates", []):
-            lib = ItemTypeLibrary.FindByName(name, src)
-            if lib is None:
-                continue
+        for name, lib in be._all_libraries(src):
             libs[name] = {str(it.GetName()): be.describe_item_type(it, src) for it in be._item_types_of(lib)}
         out["libraries"] = libs
+        out["discovery"] = getattr(be, "library_discovery", None)
+        out["selected"] = be._find_library(bic_cfg, src)[0]
         full = repo_path(os.path.join("output", "ifc_classification_library.json"))
         with open(full, "w", encoding="utf-8") as fh:
             json.dump(out, fh, ensure_ascii=False, indent=1, default=str)

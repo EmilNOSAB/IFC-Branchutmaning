@@ -71,7 +71,9 @@ REQUIRED = ["WString", "CurveVector", "DgnBoxDetail", "DPoint3d", "DVec3d", "ISo
 OPTIONAL = ["Int32Array", "DPoint3dArray", "LineStringHandler", "ShapeHandler",
             # importing Bentley's IFC Classification from IFC_Classes_Types.dgnlib, units, cells
             "DgnDocument", "DgnFile", "DgnFileOpenMode", "PickListLibrary", "DgnECUnit",
-            "NormalCellHeaderHandler", "ChildEditElemIter", "ExposeChildrenReason"]
+            "NormalCellHeaderHandler", "ChildEditElemIter", "ExposeChildrenReason",
+            # enumerating item type libraries whose name is not known
+            "ItemTypeLibraries", "DgnECManager", "SchemaInfoArray", "ECSchemaPersistence", "DgnECHostType"]
 MISSING_SYMBOLS: List[str] = []
 try:
     import MSPyBentley
@@ -141,6 +143,10 @@ def property_types() -> Dict[str, Any]:
         if kind not in out:
             raise BackendError("Item Type property type %s not found; dir(CustomProperty)=%s" % (kind, dir(CustomProperty)))
     return out
+
+
+def _norm(text: str) -> str:
+    return "".join(ch for ch in str(text).lower() if ch.isalnum())
 
 
 def dgnlib_candidates(file_name: str, config_values: Sequence[str]) -> List[str]:
@@ -404,16 +410,61 @@ class MicroStationBackend(DgnBackend):
                 "units_set": units_set, "unit_ids": getattr(self, "unit_report", {})}
 
     # ------------------------------------------- Bentley's IFC Classification
-    @staticmethod
-    def _find_library(names: Sequence[str], dgn_file):
-        for name in names:
+    def _all_libraries(self, dgn_file) -> List[Tuple[str, Any]]:
+        """Every Item Type library in a file, without knowing its name:
+        1. iterate ItemTypeLibraries(dgnFile) (pybind collection, VERIFY-IN-MS),
+        2. DgnECManager.DiscoverSchemas(SchemaInfoArray, dgnFile, Stored, eAll)
+           + ItemTypeLibrary.FindBySchemaName(schemaName, dgnFile).
+        Both ways are tried; what each found is kept in ``self.library_discovery``."""
+        found: Dict[str, Any] = {}
+        disc: Dict[str, Any] = {}
+        try:
+            libs = ItemTypeLibraries(dgn_file)
+            names = []
+            for lib in libs:
+                if lib is not None:
+                    found.setdefault(str(lib.GetName()), lib)
+                    names.append(str(lib.GetName()))
+            disc["ItemTypeLibraries"] = names
+        except Exception as e:
+            disc["ItemTypeLibraries"] = "%s: %s" % (type(e).__name__, e)
+        try:
+            infos = SchemaInfoArray()
+            DgnECManager.GetManager().DiscoverSchemas(infos, dgn_file, ECSchemaPersistence.eECSCHEMAPERSISTENCE_All,
+                                                      DgnECHostType.eAll)
+            schemas = []
+            for info in infos:
+                sname = str(info.GetSchemaName())
+                lib = ItemTypeLibrary.FindBySchemaName(sname, dgn_file)
+                schemas.append([sname, None if lib is None else str(lib.GetName())])
+                if lib is not None:
+                    found.setdefault(str(lib.GetName()), lib)
+            disc["DiscoverSchemas"] = schemas
+        except Exception as e:
+            disc["DiscoverSchemas"] = "%s: %s" % (type(e).__name__, e)
+        self.library_discovery = disc
+        return list(found.items())
+
+    def _find_library(self, cfg: Dict[str, Any], dgn_file):
+        """Bentley's IFC classification library: by the configured names, else
+        the library that holds an item type named like ``item_type_candidates``
+        (Bentley's help calls the item type 'IfcClassification')."""
+        for name in cfg.get("library_name_candidates", []):
             for finder in (ItemTypeLibrary.FindByName, ItemTypeLibrary.FindBySchemaName):
                 try:
                     lib = finder(name, dgn_file)
                 except Exception:
                     lib = None
                 if lib is not None:
-                    return name, lib
+                    return str(lib.GetName()), lib
+        wanted = {_norm(n) for n in cfg.get("item_type_candidates", [])}
+        libs = self._all_libraries(dgn_file)
+        for name, lib in libs:
+            if any(_norm(str(it.GetName())) in wanted for it in self._item_types_of(lib)):
+                return name, lib
+        for name, lib in libs:
+            if "ifcclass" in _norm(name):
+                return name, lib
         return None, None
 
     @staticmethod
@@ -533,9 +584,12 @@ class MicroStationBackend(DgnBackend):
             rep["error"] = "%s not found via %s" % (cfg["dgnlib_file"], cfg.get("dgnlib_search_config_variables"))
             return rep
         src = self.open_dgn_readonly(path)
-        name, lib = self._find_library(cfg.get("library_name_candidates", []), src)
+        self._dgnlib_src = src  # kept open: the item type may be applied from it directly
+        name, lib = self._find_library(cfg, src)
+        rep["libraries_in_dgnlib"] = getattr(self, "library_discovery", None)
         if lib is None:
-            rep["error"] = "no library %s in %s" % (cfg.get("library_name_candidates"), path)
+            rep["error"] = "no IFC classification library in %s (names tried %s, item types %s)" % (
+                path, cfg.get("library_name_candidates"), cfg.get("item_type_candidates"))
             return rep
         rep["library_in_dgnlib"] = name
         if PickListLibrary is not None:
@@ -553,19 +607,18 @@ class MicroStationBackend(DgnBackend):
         rep["written"] = bool(clone.Write())
         return rep
 
-    def find_bentley_ifc_classification(self, cfg: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def find_bentley_ifc_classification(self, cfg: Dict[str, Any], dgn_file=None) -> Optional[Dict[str, Any]]:
         """Locate Bentley's delivered 'IFC Classification' item type in the active
-        DGN and work out which property is version/class/type (candidate names
-        from config, otherwise by name), with the pick list values of each, so
-        values can be written exactly as the pick lists spell them."""
-        lib_name, lib = self._find_library(cfg.get("library_name_candidates", []), self.dgn_file)
+        DGN (or in ``dgn_file``, e.g. the opened dgnlib) and work out which
+        property is version/class/type (candidate names from config, otherwise
+        by name), with the pick list values of each, so values can be written
+        exactly as the pick lists spell them."""
+        dgn_file = dgn_file or self.dgn_file
+        lib_name, lib = self._find_library(cfg, dgn_file)
         if lib is None:
             return None
-        it = None
-        for it_name in cfg.get("item_type_candidates", []):
-            it = lib.GetItemTypeByName(it_name)
-            if it is not None:
-                break
+        wanted = {_norm(n) for n in cfg.get("item_type_candidates", [])}
+        it = next((i for i in self._item_types_of(lib) if _norm(str(i.GetName())) in wanted), None)
         if it is None:
             its = self._item_types_of(lib)
             if len(its) != 1:
@@ -573,7 +626,7 @@ class MicroStationBackend(DgnBackend):
                         "item_types_in_library": [str(i.GetName()) for i in its]}
             it = its[0]
         it_name = str(it.GetName())
-        desc = self.describe_item_type(it)
+        desc = self.describe_item_type(it, dgn_file)
         names = [d["name"] for d in desc]
         props: Dict[str, str] = {}
         for role in ("version", "class", "type"):
@@ -602,6 +655,13 @@ class MicroStationBackend(DgnBackend):
             except Exception as e:
                 rep["import"] = {"error": "%s: %s" % (type(e).__name__, e)}
             found = self.find_bentley_ifc_classification(cfg)
+            src = getattr(self, "_dgnlib_src", None)
+            if not (found and found.get("item_type")) and src is not None:
+                # second route: attach the item type from the opened dgnlib;
+                # ApplyCustomItem(itemType, importLibrariesIfRequired=True) copies
+                # the library into the DGN on the first attachment
+                found = self.find_bentley_ifc_classification(cfg, src)
+                rep["source"] = "dgnlib item type, imported on first ApplyCustomItem"
         if found and not found.get("item_type"):
             rep["error"] = "library found but item type not identified: %s" % found.get("item_types_in_library")
             found = None

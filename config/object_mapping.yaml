@@ -23,8 +23,12 @@ bentley_ifc_classification:
   # Folders are taken from these configuration variables (each also with an
   # ItemTypes subfolder); MSDIR gives the delivered <MSDIR>Default\Dgnlib\ItemTypes.
   dgnlib_search_config_variables: [MS_DGNLIBLIST_ITEMTYPES, MS_DGNLIBLIST, _USTN_INSTALLED_DGNLIBS, MSDIR]
-  library_name_candidates: [IFC Classification, IFC_Classes_Types, IFCClassification]
-  item_type_candidates: [IFC Classification, IFCClassification, IfcClassification]
+  # Library names are tried as written; item type names are compared without
+  # case/spaces/underscores.  When no library name matches, every library in the file is enumerated and the one holding an
+  # item type named like item_type_candidates is used (Bentley's help names
+  # the item type 'IfcClassification'; the library name is not documented).
+  library_name_candidates: [IfcClassification, IFC Classification, IFC_Classes_Types, IFC Classes Types]
+  item_type_candidates: [IfcClassification, IFC Classification]
   version_property_candidates: [Version, IFC Version, IfcVersion, Schema]
   class_property_candidates: [Class, IFC Class, IfcClass, Entity]
   type_property_candidates: [Type, IFC Type, IfcType, PredefinedType, Predefined Type]

@@ -30,8 +30,8 @@ Kör först `python load "<repo>\microstation\inspect_environment.py"`. Den skri
 | V-16 | Spara med key-in `FILEDESIGN` | Filens tidsstämpel | Sparad | Spara manuellt (File > Save). |
 | V-17 | Konstruktorerna `ElementPropertiesSetter()`, `EditElementHandle()` / `EditElementHandle(elementRef)` (Bentleys PDF 06 och 24), `NamedGroupFlags()`, `NamedGroupMemberFlags()`, `ECValue()`, `DPoint3d(x, y, z)`, `DVec3d(x, y, z)` | Byggskriptet i preview-läge utan fel i `errors` | Inga fel | Konstruktorerna listas inte på referenssidorna men används i Bentleys exempel. Ett fel visar exakt vilket anrop som behöver justeras i `msapi.py`. |
 | V-18 | Automatisk import av "IFC Classification": `DgnDocument.CreateForLocalFile`, `DgnFile(doc, DgnFileOpenMode.eReadOnly)`, `LoadDgnFile()`, `FillDictionaryModel()` (Bentleys PDF 05), `ItemTypeLibrary.CloneForFile(destFile, False)` + `Write()`, picklistor med `PickListLibrary.GetPickListLibFromDgn/SavePickListLibToDgn` | `model_report.json`: `bentley_ifc_classification_import` | `written: true`, picklistor sparade | Manuell import i Item Types-dialogen. Felet står i rapporten. |
-| V-19 | Enheter på Item Type-egenskaper: `DgnECUnit.FromID(id)` + `CustomProperty.SetUnits` | `model_report.json`: `item_types.unit_ids`, `item_types.units_set` | Ett id per måttyp löses upp | Lägg till rätt id i `item_type_units` (`config/object_mapping.yaml`). |
-| V-20 | GCS EPSG 5850 (SWEREF 99 18 00 + RH 2000) | `model_report.json`: `coordinate_system` | `epsg_init: 5850` | Faller tillbaka på nyckelnamnen och EPSG 3011 (verifierat). |
+| V-19 | Enheter på Item Type-egenskaper: `DgnECUnit.FromID(id)` + `CustomProperty.SetUnits` | **Verifierat (körning 2):** VOLT, WATT, METRE, METRE_SQUARED, METRE_CUBED och KILOGRAM löses upp och sätts. Exportören skriver ändå `IfcReal` med en `IfcSIUnit` i `Unit`, inte `IfcLengthMeasure`/`IfcVolumeMeasure`, och Qto_ blir `IfcPropertySet`. | – | IDS-krav med dataType IFC…MEASURE kan därför inte uppfyllas av exportören med Item Types. |
+| V-20 | GCS EPSG 5850 (SWEREF 99 18 00 + RH 2000) | **Verifierat (körning 2):** `InitFromEPSGCode(5850)` ger status 103 (stöds inte). Reserven SWEREF1999-18-00 / EPSG 3011 används. VerticalDatum blir "SWEREF1999" (`VertDatumCode.evdcFromDatum`). | – | IDS #21 VerticalDatum = RH 2000 kan inte uppfyllas med Bentleys GCS-bibliotek. |
 | V-21 | Celler: `NormalCellHeaderHandler.CreateOrphanCellElement/AddChildElement/AddChildComplete`, Item Types på barn via `ChildEditElemIter` | Exportörsprovet, `output/probe/probe_report.json` (`P03`–`P06`, `read_back`) | Barnens ProbeId läses tillbaka | Felet står per prov i rapporten. |
 | V-22 | **Vad exportören gör med varje DGN-konstruktion** (spatial struktur, containment, aggregering, grupper, IfcAlignment, enheter, Qto, klassificering, höjdsystem) | `python export/inspect_probe_export.py` (JA/nej per mekanism) | – | Avgör hur produktions-DGN:en byggs. Se `docs/IFC_relationer.md`. |
 
@@ -49,6 +49,14 @@ Verifierat i användarens körning (filerna finns i `output/`):
   * Huvudet `FILE_NAME` har `originating_system` och `authorization` = `$`. Det ger 2 fel i schemavalideringen. Det är exportörens eget fel och går inte att påverka från DGN:en.
 * **IDS på exportfilen som den är:** **1/22**. Alla element är proxys, det finns inga spårdelar, grupper eller klassificeringar, och mängderna är IfcReal i IfcPropertySet. Rapporten finns i `docs/evidence/microstation2026_run1/validation_report_raw_export.json`.
 * En efterbearbetning av samma fil gav 17/22. Den visade att informationen i DGN:en räcker, men den har tagits bort: exportfilen ska levereras som MicroStation skriver den. Allt som saknas måste därför komma från DGN-strukturen eller SchemaMapping, och det avgörs med exportörsprovet (V-22).
+
+## Andra körningen i MicroStation 2026 (utan efterbearbetning)
+
+* **IFC Classification:** byggskriptet hittade `IFC_Classes_Types.dgnlib` via MSDIR, men inget av de gissade biblioteksnamnen. Allt blev därför proxys igen (1/22). Nu räknas alla Item Type-bibliotek i filen upp (`ItemTypeLibraries` och `DgnECManager.DiscoverSchemas`), och det bibliotek som har item typen `IfcClassification` väljs. Om kopieringen inte går appliceras item typen direkt från dgnlib-filen med `ApplyCustomItem(itemType, True)`, som importerar biblioteket.
+* **Enheter:** sätts i DGN:en, men exportören skriver IfcReal + Unit (V-19).
+* **Uppräkningsvärden:** `TrackSupportingStructure`, `TrackUsage` och `TrackCharacteristic` blir `IfcPropertyEnumeratedValue(IfcText('subgradelayer'))`, dvs. med gemener.
+* **Pset_Stationing:** exportören delar seten. `Station` hamnar i `Pset_Stationing`, `HasIncreasingStation` i ett set som heter `Stationing`.
+* **GCS:** EPSG 5850 stöds inte (V-20).
 
 ## Vad som är känt och vad som är osäkert om exportören
 

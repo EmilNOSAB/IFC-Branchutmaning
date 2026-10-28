@@ -53,10 +53,10 @@ IFC-filen skapas enbart av MicroStations exportör. Därför avgör DGN-innehål
 | IfcSpatialZone | Klassat element (P08) | Ej verifierat |
 | IfcBuiltSystem + IfcRelAssignsToGroup | Klassat element (P09), Named Group med `ProcessGroupingElements=true` (P10) | Ej verifierat |
 | IfcRelDefinesByProperties (Pset) | Item Type med samma namn som Pset:en | Verifierat (Item Type-namn = Pset-namn). Uppräkningsegenskaper skrivs med gemener och fel typ (IFCTIME). |
-| Måttyper (IfcLengthMeasure …) | Item Type-egenskap med enhet (`SetUnits`, P01) | Ej verifierat. Utan enhet blir det IfcReal (verifierat). |
-| IfcElementQuantity (Qto) | Item Type `Qto_*` med enheter (P11) | Ej verifierat. I körning 1 blev det IfcPropertySet med IfcReal. |
+| Måttyper (IfcLengthMeasure …) | Item Type-egenskap med enhet (`SetUnits`) | Verifierat (körning 2): exportören skriver IfcReal + Unit, inte måttyp. |
+| IfcElementQuantity (Qto) | Item Type `Qto_*` med enheter | Verifierat (körning 2): blir IfcPropertySet med IfcReal + Unit. |
 | IfcClassificationReference (CoClass) | Ingen känd DGN-konstruktion (P12 provar två Item Type-former) | Ej verifierat. Körning 1 innehöll inga referenser. |
-| IfcProjectedCRS + IfcMapConversion | DGN:ens GCS | Verifierat: EPSG:3011, absoluta koordinater. VerticalDatum blev "SWEREF1999". Därför provas EPSG 5850 (+ RH 2000). |
+| IfcProjectedCRS + IfcMapConversion | DGN:ens GCS | Verifierat: EPSG:3011, absoluta koordinater. VerticalDatum blir "SWEREF1999". EPSG 5850 (+ RH 2000) stöds inte av Bentleys GCS-bibliotek. |
 
 Det som provet visar att exportören inte kan skapa går inte att få in i en oförändrad export från vanliga MicroStation. Kvar finns då två vägar: OpenRail Designer (civil-geometri och dess IFC-exportör) eller att acceptera att kravet inte uppfylls.
 
